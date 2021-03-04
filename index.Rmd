@@ -1,0 +1,19 @@
+---
+title: "Upwelling ML Project"
+subtitle: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The ocean environment is a complex spatial and temporal process that evolves in a seasonal and multi-year cycles. This project is preliminary work on using image classification (unsupervised learning algorithms) to study changes to seasonal upwelling patterns. During climate warming, the land warms faster than the ocean leading to changes in coastal winds which drive coastal upwelling. In addition, other changes to the ocean environment may lead to changes in seasonal upwelling.
+
+This project is focusing intially on two major seasonal upwelling regions in the Indian Ocean: upwelling off the coast of Somalia during the southeast monsoon and upwelling off the southwest coast of India during the northwest summer monsoon. The objective of this gain new insights into seasonal and yearly spatio-temporal patterns of ocean upwelling  in the Indian Ocean. The temperature of the Indian Ocean has been increasing over the last century at a greater rate than in any other tropical ocean and warming has been most extreme during the summer monsoon months when upwelling occurs. This work is trying to understand and quantify how this ocean climate change has affected aspects separate from warming per se, specifically upwelling spatial patterns, phenology, and intensity.
+
+# Authors
+
+* [Eli Holmes](faculty.washington.edu/eeholmes), Northwest Fisheries Science Center, NOAA Fisheries
+* [Jacob T Zikan](https://www.linkedin.com/in/jake-zikan), Dartmouth College
+

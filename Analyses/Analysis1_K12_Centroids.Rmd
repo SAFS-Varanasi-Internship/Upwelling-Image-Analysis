@@ -1,0 +1,203 @@
+---
+title: "Basic K-means Analysis"
+subtitle: "Full year monthly SST"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+## Read in the data
+
+Function to read in a csv file of SST. Four columns: date, lat, lon, SST.
+```{r}
+processCSV <- function(file, aspect_ratio, lat_range, long_range){
+  library(dplyr)
+
+#constants
+pixels <- prod(aspect_ratio)
+dates <- length(unique(dat$date))
+
+#reads the file. Maps out dates
+dat <- read.table(file, sep=",", skip=2)
+colnames(dat) <- c("date", "lat", "lon", "sst")
+dat$date <- as.Date(dat$date)
+
+# limit to certain box
+not.box <- dat$lat < lat_range[1] | dat$lat>lat_range[2] | dat$lon<long_range[1] | dat$lon>long_range[2]
+dat.box <- dat[!not.box, ]
+n.by.date <- tapply(dat.box$sst, dat.box$date, function(x){sum(is.na(x))})
+if(any((n.by.date-n.by.date[1])!=0)) stop("There's a problem. Should be same n for each date.")
+
+dat.wide <- pivot_wider(dat.box, names_from=date, values_from=sst)
+pos.loc <- which(!is.na(dat.wide[,3])) # which row are NA?
+dat.clean <- na.omit(dat.wide) # remove the rows that are NA
+
+# Note transpose since kmeans() wants variates in columns
+return(list(dat=t(dat.wide), dat.clean=t(dat.clean), pos.loc=pos.loc))
+}
+```
+
+Read in the data. Run once and then saved to an RData file. The data is a matrix where each row is a date (month) and each column is a pixel. The image has been unwrapped into a vector. The first 2 rows of the matrix are the lat and lon values for the pixels.
+```{r}
+datafile <- file.path(here::here(), "data", "SEAS-monthly-sst.RData")
+# file <- 'data/hawaii_soest_d124_2bb9_c935-5-27-48-80-1979-01-01-2020-06-01.csv'
+# aspect_ratio <- c(89,129)
+# lat_range <- c(7,13)
+# long_range <- c(72,78)
+# out <- processCSV(file=file, aspect_ratio=aspect_ratio,
+#                       lat_range=lat_range,
+#                       long_range=long_range)
+# save(out, file=datafile)
+load(datafile)
+```
+
+Set up the data and data features. `Data_clean` are the images without the NAs (land) and `Data_dirty` has the NAs. The latter will be need to reconstruct the images from the centroids. `pos_loc` is the indices of the non-NA values and is used to reconstruct the images.
+```{r}
+Data_clean <- out$dat.clean
+Data_dirty <- out$dat
+pos_loc <- out$pos.loc
+```
+
+Data clean and meta data. Remove the lat/lon rows and change to Celcius.
+```{r}
+lats <- Data_dirty[1,]
+lons <- Data_dirty[2,]
+asp <- c(table(lons)[1], table(lats)[1]) # lon (x) - lats (y)
+bb.box <- c(min(lons), max(lons), min(lats), max(lats))
+```
+
+## Create matrices for `kmeans()`
+
+We will use the non-normalized and normalized data. Need to remove the first 2 rows since those are the lat/lon values. For normalization, we use `scale()`.  `scale()` normalizes (removes mean and standardizes to variance 1) by column, but we need to normalize each date (row) not each pixel (column). So need to transpose.
+```{r}
+X <- Data_clean[c(-1,-2),] - 273.15
+X_norm <- scale(t(X))
+mu <- attr(X_norm, "scaled:center")
+sigma <- attr(X_norm, "scaled:scale")
+X_norm <- t(X_norm)
+```
+
+## Plot K versus SS
+
+Plot the total within sum of squares for a range of K (number of centroids).
+
+```{r findKfun}
+findK <- function(X, nstart=25, iter.max=10, n_K=15){
+cost <- rep(0, n_K)
+for(k in  1:n_K) 
+  cost[k] <- kmeans(X, k, iter.max=iter.max, nstart=nstart)$tot.withinss
+plot(1:n_K, cost, xlab="K", ylab="total within ss", type="b")
+}
+```
+
+```{r kvsSS, cache=TRUE, fig.align='left'}
+par(mfrow=c(1,2))
+findK(X_norm, nstart=25, iter.max=10, n_K=15)
+title("Normed data")
+findK(X, nstart=25, iter.max=10, n_K=15)
+title("Non-normed data")
+```
+
+For the pilot analysis, set K = 12. Some relatively big to try to capture the variability.
+```{r}
+n_K <- 12
+```
+
+## Create centroid raster stack
+
+Get centroids for normed data using the `kmeans()` function in base R.
+```{r}
+out_kmeans <- kmeans(X_norm, n_K, iter.max=10, nstart=25)
+```
+
+Create the centroid images. Need to add back in the NAs.
+```{r}
+centroid_images <- matrix(NA, n_K, ncol(Data_dirty))
+centroid_images[, pos_loc] <- out_kmeans$centers
+rownames(centroid_images) <- paste("Centroid", 1:n_K)
+```
+
+Make the centroid images into a raster stack (**raster** package).
+```{r}
+library(raster)
+img.list <- list()
+img.mat <- centroid_images
+for(i in 1:nrow(img.mat)){
+  # file is lat1, lat1, ..., lat1, lat2, lat2, ... so byrow=TRUE
+  # lat 7 is S and lat 13 is N; lat 72 is W and lat 78 is E
+  # asp is c(lons (x/cols), lats (y/rows))
+  tmp <- matrix(img.mat[i,], asp[2], asp[1], byrow=TRUE)
+  tmp <- tmp[asp[2]:1, ] # lat 7 at bottom not top
+  tmp <- raster(tmp)
+  extent(tmp) <- bb.box
+  img.list[[i]] <- tmp
+}
+centroid_stack <- stack(img.list)
+names(centroid_stack) <- paste("Centroid", 1:n_K)
+crs(centroid_stack) <- "+proj=longlat +datum=WGS84"
+```
+
+## Image: Centroids for Normed Data
+
+Make the plot using **tmap** package. One could just plot with **raster** but **tmap** is more flexible.
+```{r}
+library(tmap)
+pal <- topo.colors(100)
+tm_shape(centroid_stack) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = paste("Centroid", 1:n_K)) +
+  tm_layout(main.title = "Centroids for Normalized Images", title.size = 1)
+```
+
+## Image: Centroids for Non-Normed Data
+
+Repeat the code above but for `X` the non-normed matrix.
+```{r}
+out_kmeans <- kmeans(X, n_K, iter.max=10, nstart=25)
+```
+
+```{r echo=FALSE}
+centroid_images <- matrix(NA, n_K, ncol(Data_dirty))
+centroid_images[, pos_loc] <- out_kmeans$centers
+rownames(centroid_images) <- paste("Centroid", 1:n_K)
+img.list <- list()
+img.mat <- centroid_images
+for(i in 1:nrow(img.mat)){
+  tmp <- matrix(img.mat[i,], asp[2], asp[1], byrow=TRUE)
+  tmp <- tmp[asp[2]:1, ] 
+  tmp <- raster::raster(tmp)
+  raster::extent(tmp) <- bb.box
+  img.list[[i]] <- tmp
+}
+centroid_stack <- raster::stack(img.list)
+names(centroid_stack) <- paste("Centroid", 1:n_K)
+raster::crs(centroid_stack) <- "+proj=longlat +datum=WGS84"
+```
+
+In this plot, all the images are on the same SST scale. This makes it easy to see the upwelling pattern (cold next to coast), but makes is hard to see there is a pattern with a colder northern tongue and cold tip but different mean temperature.
+```{r centroid-nonnorm-plot1, echo=FALSE, fig.align='right'}
+pal <- topo.colors(100)
+tmap::tm_shape(centroid_stack) + 
+  tmap::tm_raster(style= "cont", title="SST", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tmap::tm_layout(panel.labels = paste("Centroid", 1:n_K)) +
+  tmap::tm_layout(main.title = "Centroids for Non-Normalized Images - Scales Same", main.title.size = 1)
+```
+
+That pattern is easy to see if all the images are on a different scale, but now it is not clear that the images have different mean temperatures.
+```{r  centroid-nonnorm-plot2, echo=FALSE, fig.align='left', out.width='570px'}
+pal <- topo.colors(100)
+tmap::tm_shape(centroid_stack) + 
+  tmap::tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tmap::tm_layout(panel.labels = paste("Centroid", 1:n_K)) +
+  tmap::tm_layout(main.title = "Centroids Non-Normalized Images - Scales Different", main.title.size = 1) +
+  tmap::tm_layout(legend.show=FALSE) +
+  tmap::tm_facets(free.scales=TRUE)
+```

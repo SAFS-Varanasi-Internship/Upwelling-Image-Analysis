@@ -1,0 +1,16 @@
+name: "docs"
+navbar:
+  title: ""
+  left:
+    - text: ""
+      icon: fa-home fa-lg
+      href: index.html
+    - text: "Analyses"
+      href: analyses.html
+
+output_dir: "docs"
+output:
+  html_document:
+    theme: cosmo
+    highlight: textmate
+    
