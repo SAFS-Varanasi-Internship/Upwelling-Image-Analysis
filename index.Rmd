@@ -12,6 +12,11 @@ The ocean environment is a complex spatial and temporal process that evolves in 
 
 This project is focusing intially on two major seasonal upwelling regions in the Indian Ocean: upwelling off the coast of Somalia during the southeast monsoon and upwelling off the southwest coast of India during the northwest summer monsoon. The objective of this gain new insights into seasonal and yearly spatio-temporal patterns of ocean upwelling  in the Indian Ocean. The temperature of the Indian Ocean has been increasing over the last century at a greater rate than in any other tropical ocean and warming has been most extreme during the summer monsoon months when upwelling occurs. This work is trying to understand and quantify how this ocean climate change has affected aspects separate from warming per se, specifically upwelling spatial patterns, phenology, and intensity.
 
+# Analyses
+
+* Pilot project: [Talk pdf](Analyses/Pilot/Dartmouth_Earth_Sci_Feb_2020.pdf) --- [Talk video](Analyses/Pilot/Zikan_Pilot_Talk.mp4)
+* [Basic K-means Analysis 1](Analyses/Analysis1_K12_Centroids.html)
+
 # Authors
 
 * [Eli Holmes](faculty.washington.edu/eeholmes), Northwest Fisheries Science Center, NOAA Fisheries
