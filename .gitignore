@@ -37,3 +37,7 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Big data
+*/hawaii_soest_d124_2bb9_c935-5-27-48-80-1979-01-01-2020-06-01.csv
+docs/*/hawaii_soest_d124_2bb9_c935-5-27-48-80-1979-01-01-2020-06-01.csv
