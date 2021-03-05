@@ -157,6 +157,7 @@ tm_shape(centroid_stack) +
 
 Repeat the code above but for `X` the non-normed matrix.
 ```{r}
+set.seed(1234)
 out_kmeans <- kmeans(X, n_K, iter.max=10, nstart=25)
 ```
 
@@ -200,4 +201,53 @@ tmap::tm_shape(centroid_stack) +
   tmap::tm_layout(main.title = "Centroids Non-Normalized Images - Scales Different", main.title.size = 1) +
   tmap::tm_layout(legend.show=FALSE) +
   tmap::tm_facets(free.scales=TRUE)
+```
+
+## Distance between images
+
+Here I use hierarchical clustering on the distances between clusters.
+
+```{r}
+set.seed(1234)
+out_kmeans <- kmeans(X, n_K, iter.max=10, nstart=25)
+CC <- out_kmeans$centers
+labs <- paste0("C", 1:n_K, "  ", round(apply(CC,1,mean)-mean(CC),digits=1))
+rownames(CC) <- labs
+```
+
+Distance based on correlation. In this case, the mean temperature of the centroid images are not important since correlation is scale invariate. So this distance is based on *shape*.
+```{r message=FALSE, warning=FALSE}
+library(dendextend)
+dd <- as.dist((1 - cor(t(CC)))/2)
+dend <- as.dendrogram(hclust(dd))
+cols <- cut(apply(CC,1,mean)-mean(CC), breaks=c(-2,-0.4,0.4,2), labels=c("blue", "black", "red"))
+labels_colors(dend) <- as.character(cols)[order.dendrogram(dend)]
+plot(dend)
+```
+
+Here the distance is Euclidian. The first split of the tree is based on average temperature. In the labels, the number is the temperature of the centroid image relative to the mean over all centroids.
+```{r}
+dd <- dist(CC)
+dend <- as.dendrogram(hclust(dd))
+cols <- cut(apply(CC,1,mean)-mean(CC), breaks=c(-2,-0.4,0.4,2), labels=c("blue", "black", "red"))
+labels_colors(dend) <- as.character(cols)[order.dendrogram(dend)]
+plot(dend)
+rect.dendrogram( dend, k=6, which=2, lty = 5, lwd = 0, col=rgb(0.1, 0.2, 0.4, 0.1) ) 
+rect.dendrogram( dend, k=6, which=1, lty = 5, lwd = 0, col=rgb(0.1, 0.2, 0.4, 0.1) ) 
+```
+
+Removing the mean off the rows seems to capture the upwelling better. Images are shown for each centroid.
+```{r echo=FALSE}
+par(mar=c(10,3,3,0))
+mat <- t(scale(t(out_kmeans$centers), scale=FALSE))
+rownames(mat) <- labs
+dd <- dist(mat)
+dend <- as.dendrogram(hclust(dd))
+cols <- cut(apply(CC,1,mean)-mean(CC), breaks=c(-2,-0.4,0.4,2), labels=c("blue", "black", "red"))
+labels_colors(dend) <- as.character(cols)[order.dendrogram(dend)]
+plot(dend)
+rect.dendrogram( dend, k=4, which=4, lty = 5, lwd = 0, col=rgb(0.1, 0.2, 0.4, 0.1) ) 
+for(i in 1:12)
+rasterImage(as.raster(img.list[[order.dendrogram(dend)[i]]], col=pal), i-0.4, -10, i+0.4, -7, 
+            xpd=TRUE, interpolate = FALSE)
 ```
