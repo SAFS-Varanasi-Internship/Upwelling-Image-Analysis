@@ -4,9 +4,9 @@ dendIMG <- function(centers, img.list, type=c("mean0", "original", "correlation"
   library(dendextend)
   n.K <- nrow(centers)
   lab.extra <- match.arg(lab.extra)
-  if(lab.extra=="mean") labs <- paste0("C", 1:n_K, " (", round(apply(centers,1,mean)-mean(centers),digits=1),")")
-  if(lab.extra=="var") labs <- paste0("C", 1:n_K, " (", round(sqrt(apply(centers,1,var)),digits=2),")")
-  if(lab.extra=="none") labs <- paste0("C", 1:n_K)
+  if(lab.extra=="mean") labs <- paste0("C", 1:n.K, " (", round(apply(centers,1,mean)-mean(centers),digits=1),")")
+  if(lab.extra=="var") labs <- paste0("C", 1:n.K, " (", round(sqrt(apply(centers,1,var)),digits=2),")")
+  if(lab.extra=="none") labs <- paste0("C", 1:n.K)
   if(type=="original"){
     mat <- centers
     rownames(mat) <- labs
@@ -18,12 +18,12 @@ dendIMG <- function(centers, img.list, type=c("mean0", "original", "correlation"
     dd <- dist(mat)
   }
   if(type=="correlation"){
-    mat <- (1 - cor(t(CC)))/2
+    mat <- (1 - cor(t(centers)))/2
     rownames(mat) <- labs
     dd <- as.dist(mat)
   }
   dend <- as.dendrogram(hclust(dd/max(dd)))
-  cols <- cut(apply(CC,1,mean)-mean(CC), breaks=c(-2,-0.4,0.4,2), labels=c("blue", "black", "red"))
+  cols <- cut(apply(centers,1,mean)-mean(centers), breaks=c(-2,-0.4,0.4,2), labels=c("blue", "black", "red"))
   labels_colors(dend) <- as.character(cols)[order.dendrogram(dend)]
   # https://rstudio.com/wp-content/uploads/2016/10/how-big-is-your-graph.pdf
   par(mar=c(10,3,1,0), oma=rep(0,4))

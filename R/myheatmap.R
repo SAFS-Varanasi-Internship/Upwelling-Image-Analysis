@@ -1,6 +1,7 @@
 myheatmap <- function(dend, kobject, main.n=3, sub.n=7, ramp=c("mean", "var"), 
                       ramp.type=1){
   cluster <- kobject$cluster
+  img.group <- kobject$cluster
   CC <- kobject$centers
   library(ggplot2)
   df <- data.frame(date=as.Date(names(cluster)), cluster=as.factor(cluster))

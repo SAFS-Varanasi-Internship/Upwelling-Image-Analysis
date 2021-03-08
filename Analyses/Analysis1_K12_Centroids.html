@@ -483,9 +483,9 @@ rect.dendrogram( dend, k=main.n, lty = 5, lwd = 0, col=rgb(0.1, 0.2, 0.4, 0.1) )
   library(dendextend)
   n.K &lt;- nrow(centers)
   lab.extra &lt;- match.arg(lab.extra)
-  if(lab.extra==&quot;mean&quot;) labs &lt;- paste0(&quot;C&quot;, 1:n_K, &quot; (&quot;, round(apply(centers,1,mean)-mean(centers),digits=1),&quot;)&quot;)
-  if(lab.extra==&quot;var&quot;) labs &lt;- paste0(&quot;C&quot;, 1:n_K, &quot; (&quot;, round(sqrt(apply(centers,1,var)),digits=2),&quot;)&quot;)
-  if(lab.extra==&quot;none&quot;) labs &lt;- paste0(&quot;C&quot;, 1:n_K)
+  if(lab.extra==&quot;mean&quot;) labs &lt;- paste0(&quot;C&quot;, 1:n.K, &quot; (&quot;, round(apply(centers,1,mean)-mean(centers),digits=1),&quot;)&quot;)
+  if(lab.extra==&quot;var&quot;) labs &lt;- paste0(&quot;C&quot;, 1:n.K, &quot; (&quot;, round(sqrt(apply(centers,1,var)),digits=2),&quot;)&quot;)
+  if(lab.extra==&quot;none&quot;) labs &lt;- paste0(&quot;C&quot;, 1:n.K)
   if(type==&quot;original&quot;){
     mat &lt;- centers
     rownames(mat) &lt;- labs
