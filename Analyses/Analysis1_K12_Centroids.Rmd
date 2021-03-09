@@ -86,13 +86,12 @@ bb.box <- c(min(lons), max(lons), min(lats), max(lats))
 
 ## Create matrices for `kmeans()`
 
-We will use the non-normalized and normalized data. Need to remove the first 2 rows since those are the lat/lon values. For normalization, we use `scale()`.  `scale()` normalizes (removes mean and standardizes to variance 1) by column, but we need to normalize each date (row) not each pixel (column). So need to transpose. Also in the context of these images, we don't want to scale (i.e. stretch) the images.
+We will use the non-normalized and normalized data. Need to remove the first 2 rows since those are the lat/lon values. For normalization, we use `scale()`.  `scale()` normalizes (removes mean and standardizes to variance 1) by column, but we need to normalize each date (row) not each pixel (column). So need to transpose. Also in the context of these images, we don't want to scale (i.e. stretch) the images but I add that for comparison.
 ```{r}
 X <- Data_clean[c(-1,-2),] - 273.15
 X_norm <- scale(t(X), scale=FALSE)
-mu <- attr(X_norm, "scaled:center")
-sigma <- attr(X_norm, "scaled:scale")
 X_norm <- t(X_norm)
+X_norm_sd <- t(scale(t(X)))
 ```
 
 ## Plot K versus SS
@@ -161,7 +160,9 @@ names(centroid_stack) <- paste("Centroid", 1:n_K)
 crs(centroid_stack) <- "+proj=longlat +datum=WGS84"
 ```
 
-## Image: Centroids for Normed Data
+## Centroids
+
+### Normed Data
 
 Make the plot using **tmap** package. One could just plot with **raster** but **tmap** is more flexible.
 ```{r}
@@ -176,7 +177,7 @@ tm_shape(centroid_stack) +
   tm_layout(main.title = "Centroids for Normalized Images", title.size = 1)
 ```
 
-## Image: Centroids for Non-Normed Data
+### Non-Normed Data
 
 Repeat the code above but for `X` the non-normed matrix.
 ```{r}
@@ -200,6 +201,7 @@ for(i in 1:nrow(img.mat)){
 centroid_stack <- raster::stack(img.list)
 names(centroid_stack) <- paste("Centroid", 1:n_K)
 raster::crs(centroid_stack) <- "+proj=longlat +datum=WGS84"
+img.list.orig <- img.list
 ```
 
 In this plot, all the images are on the same SST scale. This makes it easy to see the upwelling pattern (cold next to coast), but makes is hard to see there is a pattern with a colder northern tongue and cold tip but different mean temperature.
@@ -227,6 +229,47 @@ tmap::tm_shape(centroid_stack) +
   tmap::tm_layout(legend.show=FALSE) +
   tmap::tm_facets(free.scales=TRUE)
 ```
+
+### Normed and Variance standardized Data
+
+Repeat the code above but for `X` normed and variance standardized matrix.
+```{r}
+set.seed(1221966)
+out_kmeans_sd <- kmeans(X_norm_sd, n_K, iter.max=iter.max, nstart=nstart)
+```
+
+```{r echo=FALSE}
+out <- out_kmeans_sd
+centroid_images <- matrix(NA, n_K, ncol(Data_dirty))
+centroid_images[, pos_loc] <- out$centers
+rownames(centroid_images) <- paste("Centroid", 1:n_K)
+img.list <- list()
+img.mat <- centroid_images
+for(i in 1:nrow(img.mat)){
+  tmp <- matrix(img.mat[i,], asp[2], asp[1], byrow=TRUE)
+  tmp <- tmp[asp[2]:1, ] 
+  tmp <- raster::raster(tmp)
+  raster::extent(tmp) <- bb.box
+  img.list[[i]] <- tmp
+}
+img.list.sd <- img.list
+centroid_stack <- raster::stack(img.list)
+names(centroid_stack) <- paste("Centroid", 1:n_K)
+raster::crs(centroid_stack) <- "+proj=longlat +datum=WGS84"
+```
+
+The centroid images. Note images were demeaned and standardized to variance of 1.
+```{r centroid-norm-sd--plot1, echo=FALSE, fig.align='right'}
+pal <- topo.colors(100)
+pal <- colorRamps::matlab.like(100)
+tmap::tm_shape(centroid_stack) + 
+  tmap::tm_raster(style= "cont", title="SST-normed", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tmap::tm_layout(panel.labels = paste("Centroid", 1:n_K)) +
+  tmap::tm_layout(main.title = "Centroids for Normalized Images", main.title.size = 1)
+```
+
 
 ## Distance between images
 
@@ -264,17 +307,39 @@ rownames(CC) <- labs
 
 Distance based on correlation. In this case, the mean temperature of the centroid images are not important since correlation is scale invariate. So this distance is based on *shape*. 
 ```{r message=FALSE, warning=FALSE}
-dendIMG(CC, img.list, type="correlation", pal=pal)
+dendIMG(CC, img.list.orig, type="correlation", pal=pal)
 ```
 
 Here the distance is Euclidian. The first split of the tree is based on average temperature. In the labels, the number is the temperature of the centroid image relative to the mean over all centroids.
 ```{r}
-dendIMG(CC, img.list, type="original", pal=pal, scale.same=TRUE)
+dendIMG(CC, img.list.orig, type="original", pal=pal, scale.same=TRUE)
 ```
 
 Removing the mean off the rows seems to capture the upwelling better. Images are shown for each centroid. Note, distance scaled to maximum of 1.
 ```{r echo=FALSE, out.width="800px"}
-dendIMG(CC, img.list, type="mean0", pal=colorRamps::matlab.like(20))
+dendIMG(CC, img.list.orig, type="mean0", pal=colorRamps::matlab.like(20))
+```
+
+### Normed and variance standardized clusters
+
+```{r}
+CC <- out_kmeans_sd$centers
+labs <- paste0("C", 1:n_K)
+rownames(CC) <- labs
+```
+
+Distance based on correlation.  The `dendIMG()` function is shown below.
+```{r echo=FALSE}
+source(file.path(here::here(), "R", "dendIMG.R"))
+```
+
+```{r message=FALSE, warning=FALSE}
+dendIMG(CC, img.list.sd, type="correlation", pal=pal, scale.same=TRUE)
+```
+
+Here the distance is Euclidian. 
+```{r}
+dendIMG(CC, img.list.sd, type="original", pal=pal, scale.same=TRUE)
 ```
 
 ## Heat maps
@@ -362,7 +427,7 @@ myheatmap(dend, out_kmeans_norm, main.n=main.n, sub.n=n_K, ramp="var", ramp.type
 CC <- out_kmeans$centers
 labs <- paste0("C", 1:n_K, "  ", round(apply(CC,1,mean)-mean(CC),digits=1))
 rownames(CC) <- labs
-dend <- dendIMG(CC, img.list, type="mean0", pal=pal, scale.same=FALSE)
+dend <- dendIMG(CC, img.list.orig, type="mean0", pal=pal, scale.same=FALSE)
 rect.dendrogram(dend, sub.n, border = 2)
 rect.dendrogram( dend, k=main.n, lty = 5, lwd = 0, col=rgb(0.1, 0.2, 0.4, 0.1) ) 
 ```
@@ -383,6 +448,27 @@ myheatmap(dend, out_kmeans, main.n=main.n, sub.n=sub.n, ramp="var", ramp.type=2)
 Here I ramp based on mean and show all clusters with the three main groups. 
 ```{r}
 myheatmap(dend, out_kmeans, main.n=main.n, sub.n=n_K, ramp="mean", ramp.type=2)
+```
+
+### Normed and variance standardized heatmaps
+
+```{r echo=FALSE}
+source(file.path(here::here(), "R", "myheatmap.R"))
+source(file.path(here::here(), "R", "desat.R"))
+```
+
+```{r}
+CC <- out_kmeans_sd$centers
+labs <- paste0("C", 1:n_K)
+rownames(CC) <- labs
+dend <- dendIMG(CC, img.list.sd, type="original", pal=pal, scale.same=FALSE, lab.extra = "none")
+rect.dendrogram(dend, sub.n, border = 2)
+rect.dendrogram( dend, k=main.n, lty = 5, lwd = 0, col=rgb(0.1, 0.2, 0.4, 0.1) ) 
+```
+
+Here I ramp based on the subgroups. Since the images are demeaned and variance standardized, I cannot ramp on either of those.
+```{r}
+myheatmap(dend, out_kmeans_sd, main.n=main.n, sub.n=sub.n, ramp="mean")
 ```
 
 ## functions
