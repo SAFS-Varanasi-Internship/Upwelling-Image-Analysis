@@ -14,9 +14,12 @@ This project is focusing intially on two major seasonal upwelling regions in the
 
 # Analyses
 
-* Pilot project: [Talk pdf](Analyses/Pilot/Dartmouth_Earth_Sci_Feb_2020.pdf) --- [Talk video](Analyses/Pilot/Zikan_Pilot_Talk.mp4)
-* [Pilot: Basic K-means Analysis 1](Analyses/Analysis1_K12_Centroids.html)
-* [Pilot: K selection](Analyses/Analysis2_K_selection.html)
+## Pilot Analyses
+
+* Initial pilot project: [Talk pdf](Analyses/Pilot/Dartmouth_Earth_Sci_Feb_2020.pdf) --- [Talk video](Analyses/Pilot/Zikan_Pilot_Talk.mp4)
+* [Basic K-means Analysis 1](Analyses/Analysis1_K12_Centroids.html)
+* [K-means heatmaps different K](Analyses/Analysis2_K_heatmaps.html)
+* [kmeans vs hclust](Analyses/Analysis3_kmeans_hclust.html)
 
 # Authors
 

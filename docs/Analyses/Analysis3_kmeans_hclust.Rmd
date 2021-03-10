@@ -1,0 +1,106 @@
+---
+title: "kmeans versus hclust"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+## Set-up
+
+```{r}
+# Data
+datafile <- file.path(here::here(), "data", "SEAS-monthly-sst.RData")
+load(datafile)
+datalist <- out
+# Data for clustering functions
+Data_clean <- out$dat.clean
+X <- Data_clean[c(-1,-2),] - 273.15
+X_norm <- t(scale(t(X), scale=FALSE))
+iter.max <- 25
+nstart <- 100
+```
+
+```{r echo=FALSE}
+source(file.path(here::here(), "R", "imgVectortoRaster.R"))
+source(file.path(here::here(), "R", "addIMGtopanel.R"))
+```
+
+
+## Three groups
+
+How do the different clustering methods group the images? Here 3 groups used. This method doesn't capture the seasonal patterns and specificity of certain patterns to months. Functions are in the Rmd file.
+
+
+```{r echo=FALSE}
+yearTable <- function(X2, datalist, method=c("kmeans", "hclust.complete", "hclust.ward"), K=3, iter.max=25, nstart=100){
+  method=match.arg(method)
+df <- as.data.frame(X2)
+d <- dist(df, method = "euclidean")
+#clus <- hclust(d, method = "ward.D2" )
+if(method=="hclust.complete"){
+  clus <- hclust(d, method = "complete" )
+  sub_grp <- cutree(clus, k = K)
+  centers <- apply (X2, 2, function (x) tapply (x, sub_grp, mean))
+}
+if(method=="hclust.ward"){
+  clus <- hclust(d, method = "ward.D2" )
+  sub_grp <- cutree(clus, k = K)
+  centers <- apply (X2, 2, function (x) tapply (x, sub_grp, mean))
+}
+if(method=="kmeans"){
+  out <- kmeans(X2, K, iter.max=iter.max, nstart=nstart)
+  sub_grp <- out$cluster
+  centers <- out$centers
+}
+df2 <- data.frame(date=as.Date(rownames(df)), cluster=sub_grp)
+df2$month <- months(df2$date)
+df2$year <- format(df2$date, "%Y")
+n.year <- length(unique(df2$year))
+years <- unique(df2$year)
+dmat <- matrix(NA, n.year, K)
+df2$cluster <- as.factor(df2$cluster)
+for(i in 1:n.year){
+  dmat[i,] <- table(df2$cluster[df2$year==years[i]])
+}
+df.year <- as.data.frame(dmat)
+colnames(df.year) <- paste("C",1:K)
+df.year$year <- as.numeric(years)
+df.year.long <- tidyr::pivot_longer(df.year, starts_with("C"), names_to="cluster", values_to="count")
+df.year.long <- subset(df.year.long, year<2020)
+library(ggplot2)
+p1 <- ggplot(df.year.long, aes(x=year, y=count)) + geom_point() + 
+  ylim(0,12) + facet_wrap(~cluster)
+
+# Make images
+img.list <- imgVectortoRaster(centers, datalist)$list
+
+return(list(p=p1, img=img.list))
+}
+```
+
+## hclust complete
+
+```{r}
+out <- yearTable(X_norm, datalist, method="hclust.complete", K=3)
+addIMGtopanel(out$p, out$img)
+```
+
+## hclust ward
+
+```{r}
+out <- yearTable(X_norm, datalist, method="hclust.ward", K=3)
+addIMGtopanel(out$p, out$img)
+```
+
+## kmeans
+
+```{r}
+out <- yearTable(X_norm, datalist, method="kmeans", K=3)
+addIMGtopanel(out$p, out$img)
+```
