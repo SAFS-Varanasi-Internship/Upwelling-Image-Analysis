@@ -83,7 +83,9 @@ rownames(CC) <- labs
 pal <- colorRamps::matlab.like(100)
 dend <- dendIMG(CC, img.list, type="original", pal=pal, scale.same=TRUE, lab.extra="none")
 rect.dendrogram( dend, k=main.n, lty = 5, lwd = 0, col=rgb(0.1, 0.2, 0.4, 0.1) ) 
-myheatmap(dend, out_kmeans, main.n=main.n, sub.n=n_K, ramp="var", ramp.type=2)
+ph <- myheatmap(dend, out_kmeans, main.n=main.n, sub.n=n_K, ramp="var", ramp.type=2)
+plot(ph)
+return(ph)
 }
 ```
 
@@ -113,70 +115,97 @@ source(file.path(here::here(), "R", "desat.R"))
 source(file.path(here::here(), "R", "dendIMG.R"))
 ```
 
+### K=4
+
+```{r}
+p4 <- kheatmap(4, X_norm, Data_dirty, main.n=4)
+```
+
 ### K=6
 
 ```{r}
-kheatmap(6, X_norm, Data_dirty)
+p6 <- kheatmap(6, X_norm, Data_dirty)
 ```
 
 ### K=8
 
 ```{r}
-kheatmap(8, X_norm, Data_dirty)
+p8 <- kheatmap(8, X_norm, Data_dirty)
 ```
 
 ### K=10
 
 ```{r}
-kheatmap(10, X_norm, Data_dirty)
+p10 <- kheatmap(10, X_norm, Data_dirty)
 ```
 
 ### K=12
 
 ```{r k12}
-kheatmap(12, X_norm, Data_dirty)
+p12 <- kheatmap(12, X_norm, Data_dirty)
 ```
 
 ### K=14
 
 ```{r k14}
-kheatmap(14, X_norm, Data_dirty)
+p14 <- kheatmap(14, X_norm, Data_dirty)
 ```
 
 ### K=16
 
 ```{r k16}
-kheatmap(16, X_norm, Data_dirty)
+p16 <- kheatmap(16, X_norm, Data_dirty)
 ```
 
 ### K=18
 
 ```{r k18}
-kheatmap(18, X_norm, Data_dirty)
+p18 <- kheatmap(18, X_norm, Data_dirty)
 ```
 
 ### K=20
 
 ```{r k20}
-kheatmap(20, X_norm, Data_dirty)
+p20 <- kheatmap(20, X_norm, Data_dirty)
 ```
 
 ### K=22
 
 ```{r k22}
-kheatmap(22, X_norm, Data_dirty)
+p22 <- kheatmap(22, X_norm, Data_dirty)
 ```
 
 ### K=25
 
 ```{r k25}
-kheatmap(25, X_norm, Data_dirty, main.n=6)
+p25 <- kheatmap(25, X_norm, Data_dirty, main.n=6)
 ```
 
 ### K=30
 
 ```{r k30}
-kheatmap(30, X_norm, Data_dirty, main.n=6)
+p30 <- kheatmap(30, X_norm, Data_dirty, main.n=6)
+```
+
+## All together
+
+It appears that at least K=14 is necessary to capture the May, to June, to July switches in patterns. The red line is June.
+```{r echo=FALSE}
+library(gridExtra)
+thm <- theme(legend.position = "none", axis.title = element_blank(), axis.text = element_blank())
+add <- geom_hline(yintercept=6, col="red", alpha=0.3)
+grid.arrange(p4+thm+ggtitle("K = 4")+add,
+             p6+thm+ggtitle("K = 6")+add, 
+             p8+thm+ggtitle("K = 8")+add, 
+             p10+thm+ggtitle("K = 10")+add,
+             p12+thm+ggtitle("K = 12")+add,
+             p14+thm+ggtitle("K = 14")+add,
+             p16+thm+ggtitle("K = 16")+add,
+             p18+thm+ggtitle("K = 18")+add,
+             p20+thm+ggtitle("K = 20")+add,
+             p22+thm+ggtitle("K = 22")+add,
+             p25+thm+ggtitle("K = 25")+add,
+             p30+thm+ggtitle("K = 30")+add)
 ```
 
 

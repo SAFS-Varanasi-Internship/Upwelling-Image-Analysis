@@ -43,6 +43,8 @@ for(i in 1:length(pal.sub)) pal.sub[i] <- desat(pal.sub[i], sat=temp.scaled[i])
 }
 
 # Plot
-ggplot(df, aes(x=year, y=month, fill= cluster)) + geom_tile() +
+p1 <- ggplot(df, aes(x=year, y=month, fill= cluster)) + geom_tile() +
   scale_fill_manual(values=pal.sub)
+plot(p1)
+return(p1)
 }
