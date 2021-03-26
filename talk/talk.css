@@ -1,0 +1,29 @@
+.title-slide hgroup h1 {
+  font-size: 36pt;
+  letter-spacing: 0;
+}
+
+slides>slide.title-slide {
+    background-image: url('images/IMG_3389.JPG');
+    background-size: 100% 100%;
+}
+
+slides > slide.title-slide hgroup h1 {
+  position: fixed;
+  top: 10%;
+  left: 15%;
+  max-width: 75%;
+  font-size: 30px;
+  letter-spacing: 0;
+}
+slides > slide.title-slide hgroup h2 {
+  position: fixed;
+  top: 30%;
+  left: 15%;
+}
+slides > slide.title-slide hgroup p {
+  color:white;
+  font-size: 30px;
+  position: fixed;
+  left: 15%;
+}
