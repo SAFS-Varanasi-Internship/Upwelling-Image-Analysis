@@ -9,7 +9,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, cache=TRUE, fig.align="center")
+knitr::opts_chunk$set(echo = FALSE, cache=FALSE, fig.align="center", message=FALSE)
 library(knitr)
 library(ggplot2)
 library(factoextra)
@@ -30,33 +30,50 @@ source(file.path(here::here(), "R", "imgVectortoRaster.R"))
 
 ## Why Southeast coast of India?
 
-<font size="4"> 
-<b>2014-2019</b> NOAA Fisheries/India Ministry of Earth Sciences joint research on improving forecasts of the indian oil sardine</font>
+<b>2014-2019</b> NOAA Fisheries/India Ministry of Earth Sciences joint research on improving forecasts of the indian oil sardine
 
 * Hugely important fishery for India. 
 * India fishery produces 66–96% (average 80%) of the global oil sardine catch. 
 * Southeastern Arabian Sea (Kerala) produces the vast majority of that.
 
-<font size="4"> 
-<font style="color:blue">Improving forecasts using environmental covariates: a case study on the Indian oil sardine (Sardinella longiceps), May 24th, UW Fish and Wildlife Ecology Seminars.</br></font>
-</font>
+<font style="color:blue">Improving forecasts using environmental covariates: a case study on the Indian oil sardine (Sardinella longiceps), May 24th, UW Fish and Wildlife Ecology Seminars.</font>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
 
 
-## {data-background="images/incois-cmlre-map.png"}
+## {data-background="images/incois-cmlre-map-2.png"}
 
 <div style="background-color: white">
-<font size="4">Southwest coast of India off Kerala state. 350 miles of coastline. Disperse non-motorized and motorized fishery.</font>
+<font size="6">Southeast Arabian Sea (SEAS) off the coast of Kerala state. ca 350 miles of coastline. Dispersed non-motorized and motorized fishery. Very productive fishing region for India.</font>
 </font>
 </div>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
 
 ## Productivity in the SEAS is driven by seasonal upwelling
 
 <div class="columns-2">
   ![](images/kochi-trees-wind.png){width=100%}
-* Wind and rain
+Summer monsoon brings wind and rain
 
   ![](images/seas-wind-vectors.png){width=100%}
-  * Strong upwelling starts from the tip and moves north
+Strong upwelling starts from the tip and moves north
+</div>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro - SEAS</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
   
 ## Coastal upwelling leads to a characteristic SST differential
 
@@ -68,11 +85,21 @@ source(file.path(here::here(), "R", "imgVectortoRaster.R"))
 * Phytoplankton blooms
 * **Sea surface temperature (SST) differential**: Cold water along the coast and warm water off-shore
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro - upwelling</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
 
 ##
 
 <iframe width="720" height="480" src="images/Kochin_SST_2014-17_4x4.mp4" align="middle" frameborder="0" allowfullscreen></iframe>
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro - upwelling</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
 
 ## Coastal upwelling patterns are expected to change
 
@@ -86,25 +113,34 @@ include_graphics("images/heating-patterns.png")
 Di Lorenzo, E. 2015. The future of coastal ocean upwelling. Nature 518, 310–311.
 </font>
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro - upwelling</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 ## 
 
 <div class="columns-2">
 
 ### Can we use unsupervised image classification of sea surface temperature (SST) to study upwelling patterns and changes to those patterns?
 
-Example of SST differential during strong upwelling period
-
 ![](images/SST-Sept1.png){width=100%}
 
 </div>
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro - image classification</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
+
 ## Why unsupervised classification?
 
-...as opposed to other metrics of upwelling intensity.
-
-* Patterns are changing so I am looking for things that haven't been seen before
-* I don't know what I am looking for
-* I am looking for novel patterns of upwelling
+* I am looking for change not a specific pattern
+* I am looking for novel patterns because things are changing
+* I worked with other upwelling metrics a lot and am looking for new approaches.
 
 <center>
 <div style="float:right">
@@ -112,6 +148,13 @@ Example of SST differential during strong upwelling period
 ![](images/SST-march.png){width=40%}
 </div>
 </center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro - image classification</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 
 ## Today's seminar
 
@@ -126,6 +169,13 @@ Example of SST differential during strong upwelling period
 * As revealed by the image classification
 * Changes to the <font style="color:red">pattern</font> not absolute temperature
 * Arabian Sea has warmed a lot in the past 2 decades. I have removed that by removing the mean from each image.
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 
 ## Working with images
 
@@ -149,6 +199,12 @@ colnames(X_norm) <- paste0("p", 1:ncol(X_norm))
 round(X_norm[1:5, 1:10], digits=2)
 ```
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro - images</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 ## PCA (and EOF)
 
 * Each image (a data set with $p$ variables) can be expressed as the weighted sum of orthogonal images (i.e. independent).
@@ -161,6 +217,12 @@ $$
 \underbrace{\mathbf{X}}_{\text{data}}= \underbrace{\mathbf{U}\,\,\mathbf{D}}_{\alpha}
 \underbrace{\mathbf{V}^\top}_{\lambda}
 $$
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - overview</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 ## Classic example is facial recognition: eigenfaces
 
 <center>
@@ -168,33 +230,55 @@ $$
 ![](images/eigenfaces-vectors.png){width=75%}
 </center>
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - overview</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
+
 ## PCA and EOF also used in oceanography
 
 Pacific Decadal Oscillation index is an example. It is the weighting ($\alpha$) on the first $\lambda$ from gridded SST anomalies in the North Pacific.
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - overview</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 
 ## Let's see how to do it
 
+<!--
+With Singular Value Decomposition:
 ```{r echo=TRUE}
 pca <- svd(X_norm) #singular value decomposition
 eigenimages <- t(pca$v)
+rownames(eigenimages) <- paste0("lambda", 1:nrow(eigenimages))
 alpha <- pca$u %*% diag(pca$d)
+colnames(alpha) <- paste0("PC", 1:ncol(alpha))
+```
+-->
+
+Let's use `prcomp` in R. Using `prcomp` means you can use the visualization tools in R for PCA.
+```{r echo=TRUE}
+prcomp.pca <- prcomp(X_norm, scale = FALSE, center=FALSE)
 ```
 
-This is idential to what you get with `prcomp`:
-```
-pca <- prcomp(X_norm, scale = FALSE, center=FALSE)
-eigenimages <- t(pca$rotation)
-alpha <- pca$x
+```{r}
+# Do this so the first image looks like upwelling
+prcomp.pca$rotation[,1] <- -1*prcomp.pca$rotation[,1]
+prcomp.pca$x[,1] <- -1*prcomp.pca$x[,1]
+# Store for use later
+eigenimages <- t(prcomp.pca$rotation)
+alpha <- prcomp.pca$x
 ```
 
 ```{r echo=FALSE, warning=FALSE}
-# Do this so the first eigen image looks is upwelling instead of negative
-sst.pca$rotation[,1] <- -1*sst.pca$rotation[,1]
-sst.pca$x[,1] <- -1*sst.pca$x[,1]
 # Set up the data frame
 library(tidyr)
-df <- data.frame(sst.pca$x,
+df <- data.frame(alpha,
                 date=as.Date(rownames(X_norm)),
                 year=as.integer(format(as.Date(rownames(X_norm)), "%Y")),
                 mon=factor(format(as.Date(rownames(X_norm)), "%b"), levels=month.abb),
@@ -202,29 +286,44 @@ df <- data.frame(sst.pca$x,
 df2 = pivot_longer(df, starts_with("PC"), names_to="PC", values_to="value")
 ```
 
-* The $\lambda$ are in `sst.pca$rotation` with each column an "eigen image".
-* The $\alpha$ are in `sst.pca$x`. One for each image and each $\lambda$.
+* The $\lambda$ are in `prcomp.pca$rotation` with each column an "eigen image".
+* The $\alpha$ are in `prcomp.pca$x`. One for each image and each $\lambda$.
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - sst images</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
+##
 
 Eigen images. Just first 10 pixels of the image are shown.
 ```{r echo=TRUE}
-round(t(sst.pca$rotation)[1:5, 1:10], digits=2)
+eigenimages <- t(prcomp.pca$rotation)
+round(eigenimages[1:5, 1:10], digits=2)
 ```
-
-##
 
 ```
 # if image is say 25x25
 library(raster)
-img <- as.raster(matrix(sst.pca$rotation[,1], byrow=TRUE, ncol=25))
+img <- as.raster(matrix(eigenimages[1,], byrow=TRUE, ncol=25))
 plot(img)
 ```
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - sst images</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
+##
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-img.list <- imgVectortoRaster(t(sst.pca$rotation), datalist)$list
+img.list <- imgVectortoRaster(eigenimages, datalist)$list
 ```
 
 <center>
-```{r echo=FALSE, message=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 p_stack <- raster::stack(img.list[[1]], img.list[[2]], img.list[[3]], 
                  img.list[[4]], img.list[[5]], img.list[[6]])
 library(tmap)
@@ -238,22 +337,51 @@ tm_shape(p_stack) +
 ```
 </center>
 
-</center>
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - eigen images</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 
 
 ## Reconstructing the SST images
 
-$$\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3$$
+```{r message=FALSE, warning=FALSE, eval=FALSE}
+library(png)
+library(raster)
+for(i in 1:6){
+png(filename=paste0("images/eigen",i,".png"))
+plot(img.list[[i]], legend=FALSE, axes=FALSE, box=FALSE, col=pal)
+dev.off()
+}
+```
+
+<!--
+$$\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3 + \dots$$
+-->
+
+image =  $\alpha_1 \times$ <img src="images/eigen1.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + $\alpha_2 \times$ <img src="images/eigen2.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + $\alpha_3 \times$ <img src="images/eigen3.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + $\dots$
+
 
 ```{r}
 #reconstruction
 ncomp <- 1
-RE1 <- t(sst.pca$rotation[,1:ncomp] %*% t(sst.pca$x[,1:ncomp]))
+RE1 <- alpha[,1:ncomp, drop=FALSE] %*% eigenimages[1:ncomp,, drop=FALSE]
 ncomp <- 2
-RE2 <- t(sst.pca$rotation[,1:ncomp] %*% t(sst.pca$x[,1:ncomp]))
+RE2 <- alpha[,1:ncomp] %*% eigenimages[1:ncomp,]
 ncomp <- 3
-RE3 <- t(sst.pca$rotation[,1:ncomp] %*% t(sst.pca$x[,1:ncomp]))
+RE3 <- alpha[,1:ncomp] %*% eigenimages[1:ncomp,]
 ```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - reconstuction</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
+
+## August
 
 ```{r echo=FALSE}
 i <- 452
@@ -266,15 +394,15 @@ tm_shape(img1) +
             title=rownames(X_norm)[i])
 ```
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - reconstuction</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 ## March
 
 ```{r echo=FALSE}
-ncomp <- 1
-RE1 <- t(sst.pca$rotation[,1:ncomp] %*% t(sst.pca$x[,1:ncomp]))
-ncomp <- 2
-RE2 <- t(sst.pca$rotation[,1:ncomp] %*% t(sst.pca$x[,1:ncomp]))
-ncomp <- 3
-RE3 <- t(sst.pca$rotation[,1:ncomp] %*% t(sst.pca$x[,1:ncomp]))
 i <- 447
 img1 <- imgVectortoRaster(rbind(X_norm[i,], RE1[i,], RE2[i,], RE3[i,]), datalist)$stack
 tm_shape(img1) + 
@@ -284,6 +412,13 @@ tm_shape(img1) +
   tm_layout(panel.labels = c("True", "1 PC", "2 PC", "3 PC"),
             title=rownames(X_norm)[i])
 ```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - reconstuction</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 
 ## May
 
@@ -298,11 +433,23 @@ tm_shape(img1) +
             title=rownames(X_norm)[i])
 ```
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - reconstuction</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 ## Variance (in data set) explained
 
 ```{r}
-fviz_eig(sst.pca) + xlab("Principal Components") + ggtitle("")
+fviz_eig(prcomp.pca) + xlab("Principal Components") + ggtitle("")
 ```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - explained variance</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
 
 ## SST Anomaly pattern in the PC1-PC2 space
 
@@ -314,7 +461,7 @@ ys <- seq(min(df$PC2)+.2*wid,max(df$PC2), 2.2*wid)
 for(i in xs){
   for(j in ys){
   x <- c(i, j)
-    img.list <- imgVectortoRaster(t(sst.pca$rotation[,1:2] %*% matrix(x, ncol=1)), datalist)$list
+    img.list <- imgVectortoRaster(t(prcomp.pca$rotation[,1:2] %*% matrix(x, ncol=1)), datalist)$list
     img <- raster::as.raster(img.list[[1]])
     img[is.na(img)] <- "#808080"
     g <- grid::rasterGrob(img, interpolate=TRUE)
@@ -327,15 +474,27 @@ p +
   geom_vline(xintercept=0)
 ```   
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - PC 1&2</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 ##
 
 ```{r echo=FALSE, warning=FALSE}
-fviz_pca_ind(sst.pca,
+fviz_pca_ind(prcomp.pca,
              col.ind = factor(format(as.Date(rownames(X_norm)), "%B"), levels=month.name),
              geom="point",
              addEllipses=TRUE
              ) + ggtitle("PC1/PC1 loadings (+ = upwelling) by month")
 ```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - seasonal pattern</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
 
 ## 1980s versus 2010s
 
@@ -348,6 +507,13 @@ p <- ggplot(subset(df, decade%in%c("81-90","11-20")), aes(x=PC1, y=PC2, col=deca
   ggtitle("1980s versus 2010s")
 p
 ```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - upwelling changes</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 
 ##
 
@@ -362,6 +528,12 @@ p <- ggplot(subset(df2, PC %in% c("PC1")), aes(x=date, y=value, fill=value>0)) +
 
 p
 ```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - upwelling changes</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
 
 ##
 
@@ -384,6 +556,12 @@ p <- ggplot(df3, aes(x=date, y=center, fill=center>0)) +
 p
 ```
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - upwelling changes</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 ## September and August seem to be changing
 
 ```{r warning=FALSE, message=FALSE}
@@ -405,6 +583,12 @@ ggplot(df5, aes(x=date, y=distance)) + geom_point() +
   facet_wrap(~mon)
 ```
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - upwelling changes</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 ## August images
 
 <center>
@@ -418,6 +602,13 @@ tm_shape(img1) +
   tm_layout(panel.labels = rownames(X_norm)[loc])
 ```
 </center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - upwelling changes</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 
 ## Outlier identification
 
@@ -442,6 +633,12 @@ ggplot(df5, aes(x=date, y=distance)) + geom_point() +
   facet_wrap(~mon)
 ```
 
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - upwelling changes</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 ## March images
 
 <center>
@@ -455,6 +652,13 @@ tm_shape(img1) +
   tm_layout(panel.labels = rownames(X_norm)[loc])
 ```
 </center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - upwelling changes</td><td>K-means</td><td>H-clusters</td><td>Summary</td>
+</tr></table></div>
+
 
 ## Summer monsoon winds drive intense upwelling off the SW coast of India
 

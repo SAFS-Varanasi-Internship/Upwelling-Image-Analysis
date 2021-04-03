@@ -59,6 +59,12 @@ $$
 
 ##
 
+image =  $\alpha_1 \times$ <img src="images/eigen1.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + $\alpha_2 \times$ <img src="images/eigen2.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + $\alpha_3 \times$ <img src="images/eigen3.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + $\dots$
+
+
+
+##
+
 $$
 \begin{array}{cccc}
 &
@@ -75,3 +81,10 @@ truc & 1 & 2 & 3 \\
 \hline
 \end{array}
 $$
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means</td><td>H-clusters</td><td>Summary</td>
+</tr>
+</div>
