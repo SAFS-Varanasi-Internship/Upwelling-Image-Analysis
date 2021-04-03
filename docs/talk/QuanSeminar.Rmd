@@ -1,0 +1,468 @@
+---
+title: "Using unsupervised image classification to study changes in seasonal upwelling in the Southeast Arabian Sea"
+subtitle: "Elizabeth Eli Holmes, NWFSC UW SAFS"
+date: "9 Apr 2021 SAFS Quantative Seminar"
+output:
+  ioslides_presentation:
+    css: talk.css
+    self_contained: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, cache=FALSE, fig.align="center")
+library(knitr)
+library(ggplot2)
+library(factoextra)
+library(dplyr)
+source(file.path(here::here(), "R", "imgVectortoRaster.R"))
+```
+
+## Topics
+
+* Motivation for this study
+* Upwelling patterns
+* Common types of unsupervised image classification
+  * PCA
+  * K-means
+  * Hierarchical clustering
+* Seasonal patterns of upwelling revealed by image classification
+* Changes in upwelling in the SEAS
+
+## Why Southeast coast of India?
+
+<font size="4"> 
+<b>2014-2019</b> NOAA Fisheries/India Ministry of Earth Sciences joint research on improving forecasts of the indian oil sardine</font>
+
+* Hugely important fishery for India. 
+* India fishery produces 66–96% (average 80%) of the global oil sardine catch. 
+* Southeastern Arabian Sea (Kerala) produces the vast majority of that.
+
+<font size="4"> 
+<font style="color:blue">Improving forecasts using environmental covariates: a case study on the Indian oil sardine (Sardinella longiceps), May 24th, UW Fish and Wildlife Ecology Seminars.</br></font>
+</font>
+
+
+## {data-background="images/incois-cmlre-map.png"}
+
+<div style="background-color: white">
+<font size="4">Southwest coast of India off Kerala state. 350 miles of coastline. Disperse non-motorized and motorized fishery.</font>
+</font>
+</div>
+
+## Productivity in the SEAS is driven by seasonal upwelling
+
+<div class="columns-2">
+  ![](images/kochi-trees-wind.png){width=100%}
+* Wind and rain
+
+  ![](images/seas-wind-vectors.png){width=100%}
+  * Strong upwelling starts from the tip and moves north
+  
+## Coastal upwelling leads to a characteristic SST differential
+
+<center>
+![](images/upwelling-cartoon.png){width=60%}
+</center>
+
+* Nutrient rich water brought to the surface
+* Phytoplankton blooms
+* **Sea surface temperature (SST) differential**: Cold water along the coast and warm water off-shore
+
+
+##
+
+<iframe width="720" height="480" src="images/Kochin_SST_2014-17_4x4.mp4" align="middle" frameborder="0" allowfullscreen></iframe>
+
+
+## Coastal upwelling patterns are expected to change
+
+Land warms faster than the ocean -> changes in coastal winds
+
+```{r, fig.align="center", out.width="60%", fig.cap="Projected warming between 2015 and 2050"}
+include_graphics("images/heating-patterns.png")
+```
+
+<font size="3"> 
+Di Lorenzo, E. 2015. The future of coastal ocean upwelling. Nature 518, 310–311.
+</font>
+
+## 
+
+<div class="columns-2">
+
+### Can we use unsupervised image classification of sea surface temperature (SST) to study upwelling patterns and changes to those patterns?
+
+Example of SST differential during strong upwelling period
+
+![](images/SST-Sept1.png){width=100%}
+
+</div>
+
+## Why unsupervised classification?
+
+...as opposed to other metrics of upwelling intensity.
+
+* Patterns are changing so I am looking for things that haven't been seen before
+* I don't know what I am looking for
+* I am looking for novel patterns of upwelling
+
+<center>
+<div style="float:right">
+![](images/SST-summer.png){width=40%}
+![](images/SST-march.png){width=40%}
+</div>
+</center>
+
+## Today's seminar
+
+### Three types of unsupervised image classification
+
+* Principal Components Analysis (PCA) or Empirical Othogonal Factorization (EOF)
+* K-means clustering
+* Hierarchical clustering
+
+### Changes in the upwelling patterns in the SEAS
+
+* As revealed by the image classification
+* Changes to the <font style="color:red">pattern</font> not absolute temperature
+* Arabian Sea has warmed a lot in the past 2 decades. I have removed that by removing the mean from each image.
+
+## Working with images
+
+* An image has $p$ pixels
+* Each row is an image. Each column is a pixel. 
+* Get rid of the NA (land) columns. No NAs allowed otherwise.
+* Values are temperature with the mean temperature in that image subtracted. In some applications, you would standardize the variance to 1.
+
+Here are 5 images and just the first 10 pixels of the image.
+
+```{r echo=FALSE}
+# Data
+datafile <- file.path(here::here(), "data", "SEAS-monthly-sst.RData")
+load(datafile)
+datalist <- out
+# Data for clustering functions
+Data_clean <- out$dat.clean
+X <- Data_clean[c(-1,-2),] - 273.15
+X_norm <- t(scale(t(X), scale=FALSE))
+colnames(X_norm) <- paste0("p", 1:ncol(X_norm))
+round(X_norm[1:5, 1:10], digits=2)
+```
+
+## PCA (and EOF)
+
+* Each image (a data set with $p$ variables) can be expressed as the weighted sum of orthogonal eigenvectors (i.e. independent).
+* There are an infinite possible number of sets of eigenvectors. Usual idea is to pick ones that maximize the differention between images.
+
+$$\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3 + \dots$$
+
+## Classic example is facial recognition: eigenfaces
+
+<center>
+![](images/eigenfacesB.png){width=75%}
+![](images/eigenfaces-vectors.png){width=75%}
+</center>
+
+## PCA and EOF also used in oceanography
+
+Pacific Decadal Oscillation index is an example. It is the weighting ($\alpha$) on the first $\lambda$ from gridded SST anomalies in the North Pacific.
+
+## Equation
+
+\begin{equation}
+\newcommand\x{\times}
+\newcommand\y{\colorbox{mygreen}{$1$}}
+  \left(\begin{array}{cccc}
+    \x  & \x  & \x & \x \\
+    \hline
+    0   & \x  & \x & \x \\
+    0   & 0   & \x & \x \\
+    0   & 0   & 0  & \x \\
+    \y  & \y  & \y & \y \\
+  \end{array}\right)
+\end{equation}
+
+## Let's see how to do it
+
+```{r echo=TRUE}
+sst.pca <- prcomp(X_norm, scale = FALSE, center=FALSE)
+```
+
+```{r echo=FALSE, warning=FALSE}
+# Do this so the first eigen image looks is upwelling instead of negative
+sst.pca$rotation[,1] <- -1*sst.pca$rotation[,1]
+sst.pca$x[,1] <- -1*sst.pca$x[,1]
+# Set up the data frame
+library(tidyr)
+df <- data.frame(sst.pca$x,
+                date=as.Date(rownames(X_norm)),
+                year=as.integer(format(as.Date(rownames(X_norm)), "%Y")),
+                mon=factor(format(as.Date(rownames(X_norm)), "%b"), levels=month.abb),
+                decade=cut(as.integer(format(as.Date(rownames(X_norm)), "%Y")), breaks=seq(1970,2020,10), labels=c("71-80", "81-90", "91-00", "01-10", "11-20")))
+df2 = pivot_longer(df, starts_with("PC"), names_to="PC", values_to="value")
+```
+
+* The $\lambda$ are in `sst.pca$rotation` with each column an "eigen image".
+* The $\alpha$ are in `sst.pca$x`. One for each image and each $\lambda$.
+
+Eigen images. Just first 10 pixels of the image are shown.
+```{r echo=TRUE}
+round(t(sst.pca$rotation)[1:5, 1:10], digits=2)
+```
+
+##
+
+```
+# if image is say 25x25
+library(raster)
+img <- as.raster(matrix(sst.pca$rotation[,1], byrow=TRUE, ncol=25))
+plot(img)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+img.list <- imgVectortoRaster(t(sst.pca$rotation), datalist)$list
+```
+
+<center>
+```{r echo=FALSE, message=FALSE}
+p_stack <- raster::stack(img.list[[1]], img.list[[2]], img.list[[3]], 
+                 img.list[[4]], img.list[[5]], img.list[[6]])
+library(tmap)
+pal <- colorRamps::matlab.like(100)
+tm_shape(p_stack) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = paste("PC", 1:length(p_stack))) +
+  tm_layout(main.title = "Eigen Images", title.size = 1)
+```
+</center>
+
+</center>
+
+
+## Reconstructing the SST images
+
+$$\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3$$
+
+```{r}
+#reconstruction
+ncomp <- 1
+RE1 <- t(sst.pca$rotation[,1:ncomp] %*% t(sst.pca$x[,1:ncomp]))
+ncomp <- 2
+RE2 <- t(sst.pca$rotation[,1:ncomp] %*% t(sst.pca$x[,1:ncomp]))
+ncomp <- 3
+RE3 <- t(sst.pca$rotation[,1:ncomp] %*% t(sst.pca$x[,1:ncomp]))
+```
+
+```{r echo=FALSE}
+i <- 452
+img1 <- imgVectortoRaster(rbind(X_norm[i,], RE1[i,], RE2[i,], RE3[i,]), datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = c("True", "1 PC", "2 PC", "3 PC"),
+            title=rownames(X_norm)[i])
+```
+
+## March
+
+```{r echo=FALSE}
+ncomp <- 1
+RE1 <- t(sst.pca$rotation[,1:ncomp] %*% t(sst.pca$x[,1:ncomp]))
+ncomp <- 2
+RE2 <- t(sst.pca$rotation[,1:ncomp] %*% t(sst.pca$x[,1:ncomp]))
+ncomp <- 3
+RE3 <- t(sst.pca$rotation[,1:ncomp] %*% t(sst.pca$x[,1:ncomp]))
+i <- 447
+img1 <- imgVectortoRaster(rbind(X_norm[i,], RE1[i,], RE2[i,], RE3[i,]), datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = c("True", "1 PC", "2 PC", "3 PC"),
+            title=rownames(X_norm)[i])
+```
+
+## May
+
+```{r echo=FALSE}
+i <- 449
+img1 <- imgVectortoRaster(rbind(X_norm[i,], RE1[i,], RE2[i,], RE3[i,]), datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = c("True", "1 PC", "2 PC", "3 PC"),
+            title=rownames(X_norm)[i])
+```
+
+## Variance (in data set) explained
+
+```{r}
+fviz_eig(sst.pca) + xlab("Principal Components") + ggtitle("")
+```
+
+## SST Anomaly pattern in the PC1-PC2 space
+
+```{r echo=FALSE, warning=FALSE}
+wid <- 1.25
+p <- ggplot(df, aes(x=PC1, y=PC2)) + geom_point(col=NA)
+xs <- seq(min(df$PC1)+.2*wid,max(df$PC1), 2.2*wid)
+ys <- seq(min(df$PC2)+.2*wid,max(df$PC2), 2.2*wid)
+for(i in xs){
+  for(j in ys){
+  x <- c(i, j)
+    img.list <- imgVectortoRaster(t(sst.pca$rotation[,1:2] %*% matrix(x, ncol=1)), datalist)$list
+    img <- raster::as.raster(img.list[[1]])
+    img[is.na(img)] <- "#808080"
+    g <- grid::rasterGrob(img, interpolate=TRUE)
+    p <- p +
+      annotation_custom(g, xmin=x[1]-wid, xmax=x[1]+wid, ymin=x[2]-wid, ymax=x[2]+wid)
+  }
+}
+p + 
+  geom_hline(yintercept=0) +
+  geom_vline(xintercept=0)
+```   
+
+##
+
+```{r echo=FALSE, warning=FALSE}
+fviz_pca_ind(sst.pca,
+             col.ind = factor(format(as.Date(rownames(X_norm)), "%B"), levels=month.name),
+             geom="point",
+             addEllipses=TRUE
+             ) + ggtitle("PC1/PC1 loadings (+ = upwelling) by month")
+```
+
+## 1980s versus 2010s
+
+```{r echo=FALSE, warning=FALSE}
+p <- ggplot(subset(df, decade%in%c("81-90","11-20")), aes(x=PC1, y=PC2, col=decade)) +
+  geom_point() +
+  geom_hline(yintercept=0) +
+  geom_vline(xintercept=0) +
+  facet_wrap(~mon) +
+  ggtitle("1980s versus 2010s")
+p
+```
+
+##
+
+```{r echo=FALSE}
+p <- ggplot(subset(df2, PC %in% c("PC1")), aes(x=date, y=value, fill=value>0)) +
+  geom_col(width=300) +
+  facet_wrap(~mon) +
+  xlab("") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        legend.position = "none") +
+  ggtitle("PC1 loadings")
+
+p
+```
+
+##
+
+```{r echo=FALSE}
+df3 <- subset(df2, PC %in% c("PC1"))
+df3 <- df3 %>% group_by(mon) %>%
+  mutate(center=value-mean(value),
+         mean=mean(value))
+df3$lab <- factor(paste(df3$mon, round(df3$mean, digits=2)),
+                  levels=paste(month.abb, round(tapply(df3$mean, df3$mon, unique), digits=2)))
+                  
+p <- ggplot(df3, aes(x=date, y=center, fill=center>0)) +
+  geom_col(width=300) +
+  facet_wrap(~lab) +
+  xlab("") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        legend.position = "none") +
+  ggtitle("PC1 loadings relative to mean")
+
+p
+```
+
+## September and August seem to be changing
+
+```{r warning=FALSE, message=FALSE}
+ncomp <- 1:2
+df4 <- subset(df2, PC %in% paste0("PC", ncomp))
+df4$PC <- factor(df4$PC, level=paste0("PC", ncomp))
+df4 <- df4 %>% group_by(PC, mon) %>%
+  mutate(mean=mean(value),
+         err=value-mean)
+df5 <- df4 %>% group_by(mon, date) %>% 
+  summarize(distance=sqrt(sum(err^2)))
+```
+
+```{r}
+ggplot(df5, aes(x=date, y=distance)) + geom_point() +
+  geom_smooth(span = 0.9) + xlab("") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  ggtitle("Distance moved in PC1-PC2 space") +
+  facet_wrap(~mon)
+```
+
+## August images
+
+<center>
+```{r}
+loc <- which(rownames(X_norm)%in%paste0(1980:2019,"-08-01"))
+img1 <- imgVectortoRaster(X_norm[loc,], datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = rownames(X_norm)[loc])
+```
+</center>
+
+## Outlier identification
+
+Use the first 10 dimensions.
+
+```{r warning=FALSE, message=FALSE}
+ncomp <- 1:10
+df4 <- subset(df2, PC %in% paste0("PC", ncomp))
+df4$PC <- factor(df4$PC, level=paste0("PC", ncomp))
+df4 <- df4 %>% group_by(PC, mon) %>%
+  mutate(mean=mean(value),
+         err=value-mean)
+df5 <- df4 %>% group_by(mon, date) %>% 
+  summarize(distance=sqrt(sum(err^2)))
+```
+
+```{r}
+ggplot(df5, aes(x=date, y=distance)) + geom_point() +
+  geom_smooth(span = 0.9) + xlab("") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  ggtitle("Distance moved in PC1-PC2 space") +
+  facet_wrap(~mon)
+```
+
+## March images
+
+<center>
+```{r}
+loc <- which(rownames(X_norm)%in%paste0(1980:2019,"-03-01"))
+img1 <- imgVectortoRaster(X_norm[loc,], datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = rownames(X_norm)[loc])
+```
+</center>
+
+## Summer monsoon winds drive intense upwelling off the SW coast of India
+
+<div class="columns-2">
+  ![](images/kochi-trees-wind.png){width=100%}
+* Wind and rain
+
+  ![](images/seas-wind-vectors.png){width=100%}
+  * Strong upwelling starts from the tip and moves north
+
+</div>

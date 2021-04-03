@@ -9,21 +9,14 @@ slides>slide.title-slide {
 }
 
 slides > slide.title-slide hgroup h1 {
-  position: fixed;
-  top: 10%;
-  left: 15%;
-  max-width: 75%;
-  font-size: 30px;
+  font-size: 34px;
   letter-spacing: 0;
+  margin-top: -400px;
 }
-slides > slide.title-slide hgroup h2 {
-  position: fixed;
-  top: 30%;
-  left: 15%;
-}
+
 slides > slide.title-slide hgroup p {
   color:white;
   font-size: 30px;
-  position: fixed;
-  left: 15%;
+  margin-top: 300px;
+  margin-bottom: 0px;
 }
