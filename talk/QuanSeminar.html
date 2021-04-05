@@ -427,7 +427,7 @@ Summary
 
 <p>Land warms faster than the ocean -&gt; changes in coastal winds</p>
 
-<div style="text-align: center" class="figure">
+<div class="figure" style="text-align: center">
 <img src="images/heating-patterns.png" alt="Projected warming between 2015 and 2050" width="60%" />
 
 <p class="caption">
@@ -545,7 +545,7 @@ Summary
 
 <td id="current">
 
-Intro
+Intro - image classification
 
 </td>
 
@@ -602,7 +602,7 @@ Summary
 
 <td id="current">
 
-Intro - upwelling
+Intro
 
 </td>
 
@@ -699,10 +699,49 @@ Summary
 <li>The first vector captures most of the variance in the images.</li>
 </ul>
 
-<p>\[\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3 + \dots\] <em>For those familiar with singular value decomposition</em> \[
+\[\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3 + \dots\] <em>For those familiar with singular value decomposition</em> \[
 \underbrace{\mathbf{X}}_{\text{data}}= \underbrace{\mathbf{U}\,\,\mathbf{D}}_{\alpha}
 \underbrace{\mathbf{V}^\top}_{\lambda}
-\]</p>
+\]
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - overview
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
 
 </article></slide><slide class=""><hgroup><h2>Classic example is facial recognition: eigenfaces</h2></hgroup><article  id="classic-example-is-facial-recognition-eigenfaces">
 
@@ -712,9 +751,87 @@ Summary
 
 </center>
 
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - overview
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
 </article></slide><slide class=""><hgroup><h2>PCA and EOF also used in oceanography</h2></hgroup><article  id="pca-and-eof-also-used-in-oceanography">
 
 <p>Pacific Decadal Oscillation index is an example. It is the weighting (\(\alpha\)) on the first \(\lambda\) from gridded SST anomalies in the North Pacific.</p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - overview
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
 
 </article></slide><slide class=""><hgroup><h2>Let’s see how to do it</h2></hgroup><article  id="lets-see-how-to-do-it">
 
@@ -739,6 +856,45 @@ colnames(alpha) <- paste0("PC", 1:ncol(alpha))
 <li>The \(\alpha\) are in <code>prcomp.pca$x</code>. One for each image and each \(\lambda\).</li>
 </ul>
 
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - sst images
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
 </article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-3">
 
 <p>Eigen images. Just first 10 pixels of the image are shown.</p>
@@ -758,6 +914,45 @@ library(raster)
 img &lt;- as.raster(matrix(eigenimages[1,], byrow=TRUE, ncol=25))
 plot(img)</pre>
 
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - sst images
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
 </article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-4">
 
 <center>
@@ -766,7 +961,44 @@ plot(img)</pre>
 
 </center>
 
-</center>
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - eigen images
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
 
 </article></slide><slide class=""><hgroup><h2>Reconstructing the SST images</h2></hgroup><article  id="reconstructing-the-sst-images">
 
@@ -776,45 +1008,474 @@ $$\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3 + 
 
 <p>image = \(\alpha_1 \times\) <img src="images/eigen1.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + \(\alpha_2 \times\) <img src="images/eigen2.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + \(\alpha_3 \times\) <img src="images/eigen3.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + \(\dots\)</p>
 
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - reconstuction
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
 </article></slide><slide class=""><hgroup><h2>August</h2></hgroup><article  id="august">
 
 <p><img src="QuanSeminar_files/figure-html/unnamed-chunk-12-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - reconstuction
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
 
 </article></slide><slide class=""><hgroup><h2>March</h2></hgroup><article  id="march">
 
 <p><img src="QuanSeminar_files/figure-html/unnamed-chunk-13-1.png" width="720" style="display: block; margin: auto;" /></p>
 
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - reconstuction
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
 </article></slide><slide class=""><hgroup><h2>May</h2></hgroup><article  id="may">
 
 <p><img src="QuanSeminar_files/figure-html/unnamed-chunk-14-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - reconstuction
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
 
 </article></slide><slide class=""><hgroup><h2>Variance (in data set) explained</h2></hgroup><article  id="variance-in-data-set-explained">
 
 <p><img src="QuanSeminar_files/figure-html/unnamed-chunk-15-1.png" width="720" style="display: block; margin: auto;" /></p>
 
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - explained variance
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
 </article></slide><slide class=""><hgroup><h2>SST Anomaly pattern in the PC1-PC2 space</h2></hgroup><article  id="sst-anomaly-pattern-in-the-pc1-pc2-space">
 
 <p><img src="QuanSeminar_files/figure-html/unnamed-chunk-16-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - PC 1&amp;2
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
 
 </article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-5">
 
 <p><img src="QuanSeminar_files/figure-html/unnamed-chunk-17-1.png" width="720" style="display: block; margin: auto;" /></p>
 
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - seasonal pattern
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
 </article></slide><slide class=""><hgroup><h2>1980s versus 2010s</h2></hgroup><article  id="s-versus-2010s">
 
 <p><img src="QuanSeminar_files/figure-html/unnamed-chunk-18-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
 
 </article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-6">
 
 <p><img src="QuanSeminar_files/figure-html/unnamed-chunk-19-1.png" width="720" style="display: block; margin: auto;" /></p>
 
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
 </article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-7">
 
 <p><img src="QuanSeminar_files/figure-html/unnamed-chunk-20-1.png" width="720" style="display: block; margin: auto;" /></p>
 
-</article></slide><slide class=""><hgroup><h2>September and August seem to be changing</h2></hgroup><article  id="september-and-august-seem-to-be-changing">
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Sep and Aug seem to be changing</h2></hgroup><article  id="sep-and-aug-seem-to-be-changing">
 
 <p><img src="QuanSeminar_files/figure-html/unnamed-chunk-22-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
 
 </article></slide><slide class=""><hgroup><h2>August images</h2></hgroup><article  id="august-images">
 
@@ -824,11 +1485,89 @@ $$\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3 + 
 
 </center>
 
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
 </article></slide><slide class=""><hgroup><h2>Outlier identification</h2></hgroup><article  id="outlier-identification">
 
 <p>Use the first 10 dimensions.</p>
 
 <p><img src="QuanSeminar_files/figure-html/unnamed-chunk-25-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
 
 </article></slide><slide class=""><hgroup><h2>March images</h2></hgroup><article  id="march-images">
 
@@ -837,6 +1576,376 @@ $$\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3 + 
 <img src="QuanSeminar_files/figure-html/unnamed-chunk-26-1.png" width="720" style="display: block; margin: auto;" />
 
 </center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>K-means clustering</h2></hgroup><article  id="k-means-clustering">
+
+<center>
+
+<img width="100%" src='images/kmeans.gif' title=''/>
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - intro
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-8">
+
+<center>
+
+<img width="90%" src='images/2-pixel.png' title=''/>
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - intro
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-9">
+
+<center>
+
+<img width="90%" src='images/3-pixel.png' title=''/>
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - intro
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-10">
+
+<center>
+
+<img width="90%" src='images/p-pixel.png' title=''/>
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - intro
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Let’s try it</h2></hgroup><article  id="lets-try-it">
+
+<p>We need to choose the number of centers. I will start with 12 — big enough to capture most of the variability (which I discovered through trial and error).</p>
+
+<pre class = 'prettyprint lang-r'>set.seed(1221966)
+n_K &lt;- 12
+out_norm &lt;- kmeans(X_norm, n_K, iter.max=25, nstart=100)</pre>
+
+<ul>
+<li>The centroid images are in <code>out$centers</code>. Each row is an image.</li>
+</ul>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - sst images
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-11">
+
+<center>
+
+<img src="QuanSeminar_files/figure-html/unnamed-chunk-30-1.png" width="720" style="display: block; margin: auto;" />
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - centroids
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Distances between the images</h2></hgroup><article  id="distances-between-the-images">
+
+<p>Distance based on correlation.</p>
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-32-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - distance
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
 
 </article></slide><slide class=""><hgroup><h2>Summer monsoon winds drive intense upwelling off the SW coast of India</h2></hgroup><article  id="summer-monsoon-winds-drive-intense-upwelling-off-the-sw-coast-of-india">
 

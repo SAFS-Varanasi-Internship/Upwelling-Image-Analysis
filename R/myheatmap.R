@@ -1,5 +1,5 @@
 myheatmap <- function(dend, kobject, main.n=3, sub.n=7, ramp=c("mean", "var"), 
-                      ramp.type=1){
+                      ramp.type=1, plotit=TRUE){
   cluster <- kobject$cluster
   img.group <- kobject$cluster
   CC <- kobject$centers
@@ -45,6 +45,6 @@ for(i in 1:length(pal.sub)) pal.sub[i] <- desat(pal.sub[i], sat=temp.scaled[i])
 # Plot
 p1 <- ggplot(df, aes(x=year, y=month, fill= cluster)) + geom_tile() +
   scale_fill_manual(values=pal.sub)
-plot(p1)
+if(plotit) plot(p1)
 return(p1)
 }
