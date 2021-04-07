@@ -1,5 +1,0 @@
-<div id="footer">
-<table class="fTable">
-<tr>
-<td>Intro</td><td>PCA</td><td id="current">K-means</td><td>H-clusters</td><td>Summary</td>
-</tr>

@@ -1,0 +1,32 @@
+---
+title: "Extra_Slides"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Changes within months?
+
+```{r}
+df <- c()
+for(mon in 1:12){
+  i <- c(paste0("0",1:9),10:12)[mon]
+  n <- 2
+  dat <- X_norm
+  loc <- which(rownames(X_norm)%in%paste0(yearrange,"-",i,"-01"))
+  aug <- kmeans(dat[loc,], n, iter.max=25, nstart=100)
+  x <- paste0("C", aug$cluster)
+  tmp <- data.frame(date=as.Date(rownames(X_norm)[loc]), 
+                    month=month.abb[mon], cluster=x, p.value=NA)
+  #reticulate::py_run_string("pval=runs_test(r.x)")
+  for(j in 1:n) tmp[x==paste0("C",j), "p.value"] <- DescTools::RunsTest(x==paste0("C",j), exact=TRUE)$p.value
+    #tmp[x==paste0("C",j), "p.value"] <- tseries::runs.test(factor(x==paste0("C",j)), alternative="greater")$p.value
+  df <- rbind(df, tmp)
+}
+df$month <- factor(df$month, levels=month.abb)
+ggplot(df, aes(x=date, y=cluster, col=p.value<0.05)) + geom_point() + facet_wrap(~month) + ggtitle(paste(n,"centers for each month with randomness test")) +
+  xlab("") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
