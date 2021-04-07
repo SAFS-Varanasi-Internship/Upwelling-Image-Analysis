@@ -8,9 +8,10 @@
 #' row of our data matrix to be a date and the columns will be the pixels in the image.
 #' 
 #' @param X
-#' @param n_inits
-#' @param n_iters
-#' @param n_K
+#' @param aspect_ratio
+#' @param lat_range What range to subset
+#' @param long_range What range to subset
+#' @param has.alt If TRUE, then remove 2nd column
 #' 
 #' @return The function returns `dat.wide` which is the original data (in the specified lat/lon box) 
 #' where each row is a date and each column is a pixel in the image grid.
@@ -21,15 +22,15 @@
 #' k clustering is performed.
 #' 
 #' @export
-processCSV <- function(file, aspect_ratio, lat_range, long_range){
+processCSV <- function(file, aspect_ratio, lat_range, long_range, has.alt=FALSE){
   library(dplyr)
 
 #constants
 pixels <- prod(aspect_ratio)
-dates <- length(unique(dat$date))
 
-#reads the file. Maps out dates
+#reads the file
 dat <- read.table(file, sep=",", skip=2)
+if(has.alt) dat <- dat[,-2]
 colnames(dat) <- c("date", "lat", "lon", "sst")
 dat$date <- as.Date(dat$date)
 

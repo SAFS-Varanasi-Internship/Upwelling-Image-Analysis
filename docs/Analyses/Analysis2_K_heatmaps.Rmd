@@ -1,0 +1,211 @@
+---
+title: "K size tests"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+## Set-up
+
+```{r}
+datafile <- file.path(here::here(), "data", "SEAS-monthly-sst.RData")
+load(datafile)
+```
+
+Packages
+```{r}
+library(factoextra)
+```
+
+Set up the data and data features. 
+```{r}
+Data_clean <- out$dat.clean
+Data_dirty <- out$dat
+pos_loc <- out$pos.loc
+```
+
+Data clean and meta data. Remove the lat/lon rows and change to Celcius.
+```{r}
+lats <- Data_dirty[1,]
+lons <- Data_dirty[2,]
+asp <- c(table(lons)[1], table(lats)[1]) # lon (x) - lats (y)
+bb.box <- c(min(lons), max(lons), min(lats), max(lats))
+```
+
+Create matrices for `kmeans()`
+```{r}
+X <- Data_clean[c(-1,-2),] - 273.15
+X_norm <- t(scale(t(X), scale=FALSE))
+```
+
+Set variables for `kmeans()`
+For the pilot analysis, set K = 12. Some relatively big to try to capture the variability.
+```{r}
+iter.max <- 25
+nstart <- 100
+```
+
+## Heat maps
+
+Function for the analyses.
+```{r echo=FALSE}
+findK <- function(X, nstart=25, iter.max=100, n_K=15){
+cost <- rep(0, n_K-1)
+for(k in  1:(n_K-1)) 
+  cost[k] <- kmeans(X, k, iter.max=iter.max, nstart=nstart)$tot.withinss
+plot(1:(n_K-1), cost, xlab="K", ylab="total within ss", type="b")
+}
+kheatmap <- function(n_K, X_norm, Data_dirty, main.n=5, iter.max=25, nstart=100){
+  set.seed(1221966)
+  out_kmeans <- kmeans(X_norm, n_K, iter.max=iter.max, nstart=nstart)
+  centroid_images <- matrix(NA, n_K, ncol(Data_dirty))
+  centroid_images[, pos_loc] <- out_kmeans$centers
+  rownames(centroid_images) <- paste("Centroid", 1:n_K)
+  library(raster)
+  img.list <- list()
+  img.mat <- centroid_images
+  for(i in 1:nrow(img.mat)){
+  tmp <- matrix(img.mat[i,], asp[2], asp[1], byrow=TRUE)
+  tmp <- tmp[asp[2]:1, ] # lat 7 at bottom not top
+  tmp <- raster(tmp)
+  extent(tmp) <- bb.box
+  img.list[[i]] <- tmp
+  }
+CC <- out_kmeans$centers
+labs <- paste0("C", 1:n_K)
+rownames(CC) <- labs
+pal <- colorRamps::matlab.like(100)
+dend <- dendIMG(CC, img.list, type="original", pal=pal, scale.same=TRUE, lab.extra="none")
+rect.dendrogram( dend, k=main.n, lty = 5, lwd = 0, col=rgb(0.1, 0.2, 0.4, 0.1) ) 
+ph <- myheatmap(dend, out_kmeans, main.n=main.n, sub.n=n_K, ramp="var", ramp.type=2)
+plot(ph)
+return(ph)
+}
+```
+
+```{r echo=FALSE}
+fviz1 <- function(n_K, X_norm, Data_dirty, main.n=4, iter.max=25, nstart=100, type=1){
+  set.seed(1221966)
+  out_kmeans <- kmeans(X_norm, n_K, iter.max=iter.max, nstart=nstart)
+CC <- out_kmeans$centers
+labs <- paste0("C", 1:n_K)
+rownames(CC) <- labs
+if(type==2) fviz_nbclust(CC, kmeans, method = "silhouette",k.max=n_K-1)
+if(type==1) fviz_nbclust(CC, kmeans, method = "wss",k.max=n_K-1)
+if(type==3){
+  gap_stat <- cluster::clusGap(CC, FUN = kmeans, nstart = 25,
+                    K.max = n_K-1, B = 50)
+  fviz_gap_stat(gap_stat)
+}
+if(type==4) NbClust::NbClust(CC, distance = "euclidean", min.nc=2, max.nc=4, 
+            method = "ward.D", index = "all")
+}
+```
+
+
+```{r echo=FALSE}
+source(file.path(here::here(), "R", "myheatmap.R"))
+source(file.path(here::here(), "R", "desat.R"))
+source(file.path(here::here(), "R", "dendIMG.R"))
+```
+
+### K=4
+
+```{r}
+p4 <- kheatmap(4, X_norm, Data_dirty, main.n=4)
+```
+
+### K=6
+
+```{r}
+p6 <- kheatmap(6, X_norm, Data_dirty)
+```
+
+### K=8
+
+```{r}
+p8 <- kheatmap(8, X_norm, Data_dirty)
+```
+
+### K=10
+
+```{r}
+p10 <- kheatmap(10, X_norm, Data_dirty)
+```
+
+### K=12
+
+```{r k12}
+p12 <- kheatmap(12, X_norm, Data_dirty)
+```
+
+### K=14
+
+```{r k14}
+p14 <- kheatmap(14, X_norm, Data_dirty)
+```
+
+### K=16
+
+```{r k16}
+p16 <- kheatmap(16, X_norm, Data_dirty)
+```
+
+### K=18
+
+```{r k18}
+p18 <- kheatmap(18, X_norm, Data_dirty)
+```
+
+### K=20
+
+```{r k20}
+p20 <- kheatmap(20, X_norm, Data_dirty)
+```
+
+### K=22
+
+```{r k22}
+p22 <- kheatmap(22, X_norm, Data_dirty)
+```
+
+### K=25
+
+```{r k25}
+p25 <- kheatmap(25, X_norm, Data_dirty, main.n=6)
+```
+
+### K=30
+
+```{r k30}
+p30 <- kheatmap(30, X_norm, Data_dirty, main.n=6)
+```
+
+## All together
+
+It appears that at least K=14 is necessary to capture the May, to June, to July switches in patterns. The red line is June.
+```{r echo=FALSE}
+library(gridExtra)
+thm <- theme(legend.position = "none", axis.title = element_blank(), axis.text = element_blank())
+add <- geom_hline(yintercept=6, col="red", alpha=0.3)
+grid.arrange(p4+thm+ggtitle("K = 4")+add,
+             p6+thm+ggtitle("K = 6")+add, 
+             p8+thm+ggtitle("K = 8")+add, 
+             p10+thm+ggtitle("K = 10")+add,
+             p12+thm+ggtitle("K = 12")+add,
+             p14+thm+ggtitle("K = 14")+add,
+             p16+thm+ggtitle("K = 16")+add,
+             p18+thm+ggtitle("K = 18")+add,
+             p20+thm+ggtitle("K = 20")+add,
+             p22+thm+ggtitle("K = 22")+add,
+             p25+thm+ggtitle("K = 25")+add,
+             p30+thm+ggtitle("K = 30")+add)
+```
+
+

@@ -14,19 +14,38 @@ library(knitr)
 library(ggplot2)
 library(factoextra)
 library(dplyr)
+library(tidyr)
+library(raster)
+library(tmap)
+library(png)
+library(gridExtra)
+library(dendextend)
+library(DescTools)
 source(file.path(here::here(), "R", "imgVectortoRaster.R"))
+source(file.path(here::here(), "R", "dendIMG.R"))
+source(file.path(here::here(), "R", "myheatmap.R"))
+source(file.path(here::here(), "R", "desat.R"))
+source(file.path(here::here(), "R", "kheatmap.R"))
+source(file.path(here::here(), "R", "addIMGtopanel.R"))
+source(file.path(here::here(), "R", "yearTable.R"))
+# Code to download data from ERDDAP servers is in data folder
 ```
 
 ## Topics
 
 * Motivation for this study
-* Upwelling patterns
+* Brief intro to upwelling patterns
 * Common types of unsupervised image classification
   * PCA
   * K-means
   * Hierarchical clustering
 * Seasonal patterns of upwelling revealed by image classification
 * Changes in upwelling in the SEAS
+
+##
+
+![](images/innovation_funnel.jpg){width=100%}
+
 
 ## Why Southeast coast of India?
 
@@ -35,6 +54,7 @@ source(file.path(here::here(), "R", "imgVectortoRaster.R"))
 * Hugely important fishery for India. 
 * India fishery produces 66–96% (average 80%) of the global oil sardine catch. 
 * Southeastern Arabian Sea (Kerala) produces the vast majority of that.
+* I know a lot about this upwelling system, so good place to start.
 
 <font style="color:blue">Improving forecasts using environmental covariates: a case study on the Indian oil sardine (Sardinella longiceps), May 24th, UW Fish and Wildlife Ecology Seminars.</font>
 
@@ -164,11 +184,13 @@ Di Lorenzo, E. 2015. The future of coastal ocean upwelling. Nature 518, 310–31
 * K-means clustering
 * Hierarchical clustering
 
+I also looked at density-based clustering but didn't have much success there.
+
 ### Changes in the upwelling patterns in the SEAS
 
-* As revealed by the image classification
-* Changes to the <font style="color:red">pattern</font> not absolute temperature
+* I am looking at changes to the <font style="color:red">pattern</font> not absolute temperature
 * Arabian Sea has warmed a lot in the past 2 decades. I have removed that by removing the mean from each image.
+* I am showing **monthly** images in most of the talk, but at the end I will switch to **daily** when talking more about the SEAS changes
 
 <div id="footer">
 <table class="fTable">
@@ -195,9 +217,18 @@ datalist <- out
 Data_clean <- out$dat.clean
 Data_dirty <- out$dat
 pos_loc <- out$pos.loc
-X <- Data_clean[c(-1,-2),] - 273.15
+X <- Data_clean[c(-1,-2),] - 273.15 #Kelvin in ERA5
+dates <- as.Date(rownames(X))
+years <- as.numeric(format(dates, "%Y"))
 X_norm <- t(scale(t(X), scale=FALSE))
-colnames(X_norm) <- paste0("p", 1:ncol(X_norm))
+colnames(X_norm) <- colnames(X) <- paste0("p", 1:ncol(X_norm))
+dates <- as.Date(rownames(X))
+years <- as.numeric(format(dates, "%Y"))
+mons <- format(dates, "%B")
+yearrange <- min(years):max(years)
+```
+
+```{r echo=FALSE}
 round(X_norm[1:5, 1:10], digits=2)
 ```
 
@@ -368,12 +399,12 @@ image =  $\alpha_1 \times$ <img src="images/eigen1.png"  width="100" height="100
 
 ```{r}
 #reconstruction
-ncomp <- 1
-RE1 <- alpha[,1:ncomp, drop=FALSE] %*% eigenimages[1:ncomp,, drop=FALSE]
-ncomp <- 2
-RE2 <- alpha[,1:ncomp] %*% eigenimages[1:ncomp,]
-ncomp <- 3
-RE3 <- alpha[,1:ncomp] %*% eigenimages[1:ncomp,]
+ncomp1 <- 1
+RE1 <- alpha[,1:ncomp1, drop=FALSE] %*% eigenimages[1:ncomp1,, drop=FALSE]
+ncomp2 <- 2
+RE2 <- alpha[,1:ncomp2] %*% eigenimages[1:ncomp2,]
+ncomp3 <- 10
+RE3 <- alpha[,1:ncomp3] %*% eigenimages[1:ncomp3,]
 ```
 
 <div id="footer">
@@ -386,13 +417,13 @@ RE3 <- alpha[,1:ncomp] %*% eigenimages[1:ncomp,]
 ## August
 
 ```{r echo=FALSE}
-i <- 452
+i <- which(rownames(X_norm)=="1987-08-01")
 img1 <- imgVectortoRaster(rbind(X_norm[i,], RE1[i,], RE2[i,], RE3[i,]), datalist)$stack
 tm_shape(img1) + 
   tm_raster(style= "cont", title="SST Anomaly", 
             palette=pal, midpoint=NA, 
             colorNA = "grey", textNA = "Land") +
-  tm_layout(panel.labels = c("True", "1 PC", "2 PC", "3 PC"),
+  tm_layout(panel.labels = c("True", paste(c(ncomp1, ncomp2, ncomp3),"PC")),
             title=rownames(X_norm)[i])
 ```
 
@@ -405,13 +436,13 @@ tm_shape(img1) +
 ## March
 
 ```{r echo=FALSE}
-i <- 447
+i <- which(rownames(X_norm)=="1987-03-01")
 img1 <- imgVectortoRaster(rbind(X_norm[i,], RE1[i,], RE2[i,], RE3[i,]), datalist)$stack
 tm_shape(img1) + 
   tm_raster(style= "cont", title="SST Anomaly", 
             palette=pal, midpoint=NA, 
             colorNA = "grey", textNA = "Land") +
-  tm_layout(panel.labels = c("True", "1 PC", "2 PC", "3 PC"),
+  tm_layout(panel.labels = c("True", paste(c(ncomp1, ncomp2, ncomp3),"PC")),
             title=rownames(X_norm)[i])
 ```
 
@@ -425,13 +456,13 @@ tm_shape(img1) +
 ## May
 
 ```{r echo=FALSE}
-i <- 449
+i <- which(rownames(X_norm)=="1987-05-01")
 img1 <- imgVectortoRaster(rbind(X_norm[i,], RE1[i,], RE2[i,], RE3[i,]), datalist)$stack
 tm_shape(img1) + 
   tm_raster(style= "cont", title="SST Anomaly", 
             palette=pal, midpoint=NA, 
             colorNA = "grey", textNA = "Land") +
-  tm_layout(panel.labels = c("True", "1 PC", "2 PC", "3 PC"),
+  tm_layout(panel.labels = c("True", paste(c(ncomp1, ncomp2, ncomp3),"PC")),
             title=rownames(X_norm)[i])
 ```
 
@@ -631,7 +662,7 @@ df5 <- df4 %>% group_by(mon, date) %>%
 ggplot(df5, aes(x=date, y=distance)) + geom_point() +
   geom_smooth(span = 0.9) + xlab("") + 
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
-  ggtitle("Distance moved in PC1-PC2 space") +
+  ggtitle("Distance moved in PC 1 to 10 space") +
   facet_wrap(~mon)
 ```
 
@@ -738,7 +769,7 @@ rownames(centroidimages_norm) <- paste("Centroid", 1:n_K)
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 img_norm <- imgVectortoRaster(centroidimages_norm, datalist)
 img.stack.norm <- img_norm$stack
-img.list.norm <- img_norm$stack
+img.list.norm <- img_norm$list
 ```
 
 <center>
@@ -763,15 +794,9 @@ tm_shape(img.stack.norm) +
 ## Distances between the images
 
 Distance based on Euclidian distance. 
-```{r echo=FALSE}
-source(file.path(here::here(), "R", "dendIMG.R"))
-source(file.path(here::here(), "R", "myheatmap.R"))
-source(file.path(here::here(), "R", "desat.R"))
-source(file.path(here::here(), "R", "kheatmap.R"))
-```
 
 ```{r warning=FALSE}
-p12 <- kheatmap(12, X_norm, datalist, main.n=5, plotit=FALSE)
+p12 <- kheatmap(12, X_norm, datalist, main.n=5, plotit=FALSE, dend.type="original")
 ```
 
 <div id="footer">
@@ -800,10 +825,10 @@ p12$heatmap
 Darker colors equals more variance. So if upwelling = stronger differential.
 
 ```{r include=FALSE, warning=FALSE}
-p4 <- kheatmap(4, X_norm, datalist, main.n=4, plotit=FALSE)$heatmap
-p12 <- kheatmap(12, X_norm, datalist, plotit=FALSE)$heatmap
-p18 <- kheatmap(18, X_norm, datalist, plotit=FALSE)$heatmap
-p25 <- kheatmap(25, X_norm, datalist, main.n=6, plotit=FALSE)$heatmap
+p5 <- kheatmap(5, X_norm, datalist, main.n=5, plotit=FALSE)$heatmap
+p12 <- kheatmap(12, X_norm, datalist, main.n=5, plotit=FALSE)$heatmap
+p18 <- kheatmap(18, X_norm, datalist, main.n=5, plotit=FALSE)$heatmap
+p22 <- kheatmap(22, X_norm, datalist, main.n=5, plotit=FALSE)$heatmap
 ```
 
 ```{r echo=FALSE}
@@ -811,24 +836,13 @@ library(gridExtra)
 thm <- theme(legend.position = "none", axis.title = element_blank(), axis.text = element_blank())
 add <- geom_hline(yintercept=6, col="red", alpha=0.3)
 add2 <- annotate("text", 2022, 1:12, label=stringr::str_sub(month.abb,1,1), hjust=0)
-grid.arrange(p4+thm+ggtitle("K = 4")+add+
-               annotate("text", 1985, 3.5, label="cold N tongue")+
-               annotate("text", 1985, 6, label="cold tip",color="white")+
-               annotate("text", 2005, 8, label="upwelling")+
-               annotate("text", 2000, 11, label="uniform"),
-             p12+thm+ggtitle("K = 12")+add+add2+
-               annotate("text", 1985, 3.5, label="cold N tongue")+
-               annotate("text", 1985, 6, label="cold tip",color="white")+
-               annotate("text", 2005, 8, label="upwelling")+
-               annotate("text", 1990, 10, label="pink = weak upwelling")+
-               annotate("text", 2000, 11, label="uniform"),
-             p18+thm+ggtitle("K = 18")+add,
-             p25+thm+ggtitle("K = 25")+add+add2+
-               annotate("text", 1985, 3.5, label="cold N tongue",color="white")+
-               annotate("text", 1985, 6, label="cold tip")+
-               annotate("text", 2005, 8, label="upwelling")+
-               annotate("text", 1990, 10, label="green = weak upwelling",color="white")+
-               annotate("text", 2000, 11, label="uniform",color="white"))
+add3 <- annotate("text", c(1985, 1985, 2005, 2000), c(3.5, 6, 8, 11), 
+                 label=c("cold N tongue", "cold tip", "upwelling", "uniform"), 
+                 color=c("black", "white", "black", "black"))
+grid.arrange(p5+thm+ggtitle("K = 5")+add+add3,
+             p12+thm+ggtitle("K = 12")+add+add2+add3,
+             p18+thm+ggtitle("K = 18")+add+add3,
+             p22+thm+ggtitle("K = 22")+add+add2+add3)
 ```
 
 
@@ -853,6 +867,31 @@ grid.arrange(p4+thm+ggtitle("K = 4")+add+
 <td>Intro</td><td>PCA</td><td id="current">K-means - heatmap</td><td>H-clusters</td><td>Summary</td>
 </tr></table></div>
 
+
+## Changes within months?
+
+```{r}
+df <- c()
+for(mon in 1:12){
+  i <- c(paste0("0",1:9),10:12)[mon]
+  n <- 2
+  dat <- X_norm
+  loc <- which(rownames(X_norm)%in%paste0(yearrange,"-",i,"-01"))
+  aug <- kmeans(dat[loc,], n, iter.max=25, nstart=100)
+  x <- paste0("C", aug$cluster)
+  tmp <- data.frame(date=as.Date(rownames(X_norm)[loc]), 
+                    month=month.abb[mon], cluster=x, p.value=NA)
+  #reticulate::py_run_string("pval=runs_test(r.x)")
+  for(j in 1:n) tmp[x==paste0("C",j), "p.value"] <- DescTools::RunsTest(x==paste0("C",j), exact=TRUE)$p.value
+    #tmp[x==paste0("C",j), "p.value"] <- tseries::runs.test(factor(x==paste0("C",j)), alternative="greater")$p.value
+  df <- rbind(df, tmp)
+}
+df$month <- factor(df$month, levels=month.abb)
+ggplot(df, aes(x=date, y=cluster, col=p.value<0.05)) + geom_point() + facet_wrap(~month) + ggtitle(paste(n,"centers for each month with randomness test")) +
+  xlab("") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
 ## Raw temperature patterns
 
 ```{r}
@@ -864,30 +903,6 @@ p12 <- kheatmap(12, X, datalist, main.n=4, sub.n=6, plotit=FALSE, ramp="mean", r
 <tr>
 <td>Intro</td><td>PCA</td><td id="current">K-means - seasonal</td><td>H-clusters</td><td>Summary</td>
 </tr></table></div>
-
-## This approach doesn't really capture outliers
-
-```{r}
-df <- c()
-for(mon in 1:12){
-  i <- c(paste0("0",1:9),10:12)[mon]
-  n <- 3
-  dat <- X_norm
-  loc <- which(rownames(X_norm)%in%paste0(1980:2019,"-",i,"-01"))
-  aug <- kmeans(dat[loc,], n, iter.max=25, nstart=100)
-  x <- paste0("C", aug$cluster)
-  tmp <- data.frame(date=as.Date(rownames(X_norm)[loc]), 
-                    month=month.abb[mon], cluster=x, p.value=NA)
-  #reticulate::py_run_string("pval=runs_test(r.x)")
-  for(j in 1:n) tmp[x==paste0("C",j), "p.value"] <- RunsTest(x==paste0("C",j), exact=TRUE)$p.value
-    #tmp[x==paste0("C",j), "p.value"] <- tseries::runs.test(factor(x==paste0("C",j)), alternative="greater")$p.value
-  df <- rbind(df, tmp)
-}
-df$month <- factor(df$month, levels=month.abb)
-ggplot(df, aes(x=date, y=cluster, col=p.value<0.05)) + geom_point() + facet_wrap(~month) + ggtitle("3 centers for each month") +
-  xlab("") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-```
 
 ## Raw temperature seasonal pattern
 
@@ -916,20 +931,288 @@ p12$heatmap
 </tr></table></div>
 
 
-##
+## Let's try it!
 
-Mahalanobis distance?
-No. Hier clus with PC scores, first 10 eigen images.
+* I am going to cluster on the raw images, but later I will be clustering on the Principal Components so that I have orthogonal variables.
+* I am also going to use Euclidian distance. I've tried a bunch. At this point, I don't see that huge of a difference.
+
+```{r echo=TRUE}
+ncomp <- 20
+d <- dist(X_norm, method = "euclidian")
+clus <- hclust(d)
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td">PCA</td><td>K-means</td><td id="current>H-clusters - example</td><td>Summary</td>
+</tr></table></div>
+
+## `method="ward.D2"` default
+
+This method tries to make compact clusters of similar size.
+
+```{r}
+clus <- hclust(d, method="ward.D2")
+dend <- as.dendrogram(clus)
+nodePar <- list(lab.cex = 0.6, pch = c(NA, 19), 
+                cex = 0.2, col = "blue")
+library(dendextend)
+dend %>%
+  set("labels_col", value = c("skyblue", "orange", "grey","red", "black"), k=3) %>%
+  set("branches_k_color", value = c("skyblue", "orange", "grey", "red", "black"), k = 3) %>%
+  plot(horiz=TRUE, axes=FALSE, ylab = "", xlab="Distance", 
+     nodePar = nodePar, leaflab = "none", main="method='ward.D2'")
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td">PCA</td><td>K-means</td><td id="current>H-clusters - ward</td><td>Summary</td>
+</tr></table></div>
+
+## `method="complete"` default
+
+This method allows you to find outliers.
+
+```{r}
+clus <- hclust(d)
+dend <- as.dendrogram(clus)
+nodePar <- list(lab.cex = 0.6, pch = c(NA, 19), 
+                cex = 0.2, col = "blue")
+library(dendextend)
+dend %>%
+  set("labels_col", value = c("skyblue", "orange", "grey","red", "black"), k=5) %>%
+  set("branches_k_color", value = c("skyblue", "orange", "grey", "red", "black"), k = 5) %>%
+  plot(horiz=TRUE, axes=FALSE, ylab = "", xlab="Distance", 
+     nodePar = nodePar, leaflab = "none", main="method='complete'")
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td">PCA</td><td>K-means</td><td id="current>H-clusters - complete</td><td>Summary</td>
+</tr></table></div>
+
+## `method="complete"` default
+
+```{r}
+K <- 5
+clus <- hclust(d, method="complete")
+sub_grp <- cutree(clus, k = K)
+centers <- apply (X_norm, 2, function (x) tapply (x, sub_grp, mean))
+img.list <- imgVectortoRaster(centers, datalist)$list
+dendIMG(centers, img.list, lab.extra="none")
+```
+   
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td">PCA</td><td>K-means</td><td id="current>H-clusters - complete centroids</td><td>Summary</td>
+</tr></table></div>
+
+## `method="ward.D2"` 
+
+```{r}
+K <- 5
+clus <- hclust(d, method="ward.D2")
+sub_grp <- cutree(clus, k = K)
+centers <- apply (X_norm, 2, function (x) tapply (x, sub_grp, mean))
+img.list <- imgVectortoRaster(centers, datalist)$list
+dendIMG(centers, img.list, lab.extra="none")
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td">PCA</td><td>K-means</td><td id="current>H-clusters - ward centroids</td><td>Summary</td>
+</tr></table></div>
+
+## Summary for hierarchical clustering
+
+* Allows you to get a better understanding of the structure
+* Overall not that different from patterns from k-means
+* Does better than k-means at outlier identification using `method="complete"`
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td">PCA</td><td>K-means</td><td id="current>H-clusters - summary</td><td>Summary</td>
+</tr></table></div>
+
+## Changes in the SEAS
+
+Daily SST from the NOAA IOSST data set. Interpolated daily data from AVHRR. Not so smooth as the ERA5 monthly data.
+
+```{r echo=FALSE}
+# Data
+datafile <- file.path(here::here(), "data", "SEAS-daily-sst-1981-2020.RData")
+load(datafile)
+datalist <- out
+# Data for clustering functions
+Data_clean <- out$dat.clean
+Data_dirty <- out$dat
+pos_loc <- out$pos.loc
+#X <- Data_clean[c(-1,-2),] - 273.15
+X <- Data_clean[c(-1,-2),]
+dates <- as.Date(rownames(X))
+years <- as.numeric(format(dates, "%Y"))
+X <- X[years>1981,]
+X_norm <- t(scale(t(X), scale=FALSE))
+colnames(X_norm) <- colnames(X) <- paste0("p", 1:ncol(X_norm))
+dates <- as.Date(rownames(X))
+years <- as.numeric(format(dates, "%Y"))
+wks <- as.numeric(strftime(dates, format = "%V"))
+mons <- format(dates, "%B")
+yearrange <- min(years):max(years)
+```
+
+<center>
+```{r}
+loc <- which(rownames(X)%in%paste0(1980:2019,"-08-01"))
+img1 <- imgVectortoRaster(X[loc,], datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = rownames(X_norm)[loc]) +
+  ggtitle("August 1 images")
+```
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td">PCA</td><td>K-means</td><td>H-clusters</td><td id="current>Summary - Daily images</td>
+</tr></table></div>
+
+## Demeaned data
+
+<center>
+```{r}
+loc <- which(rownames(X)%in%paste0(1980:2019,"-08-01"))
+img1 <- imgVectortoRaster(X_norm[loc,], datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = rownames(X_norm)[loc]) +
+  ggtitle("August 1 images")
+```
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td">PCA</td><td>K-means</td><td>H-clusters</td><td id="current>Summary - Daily images</td>
+</tr></table></div>
+
+## Jul-Sep number of days with upwelling signal
+
+For speed purposes, I am going to use the first 20 Principal Components, so a 14245 $\timex$ 20 matrix instead of a 14245 $\times$ 443 matrix.
+
+```{r}
+prcomp.pca <- prcomp(X_norm, scale = FALSE, center=FALSE)
+eigenimages <- t(prcomp.pca$rotation)
+alpha <- prcomp.pca$x
+```
+
+```{r}
+ncomp <- 20
+monvals <- month.name[6:9]
+for(meth in c("hclust.complete")){
+  p1 <- yearTable(alpha[mons%in%monvals,1:ncomp], 
+                  method=meth, K=3, 
+                  dist.type="euclidian")
+  #p <- p1$p+geom_smooth(method = "lm", se = TRUE)+ggtitle(meth)
+  p <- p1$p + geom_smooth(span = 0.3)+
+    ggtitle(paste0("Number of days in each pattern in June-Sept (", meth, ")"))
+  centers <- p1$centers %*% eigenimages[1:ncomp,, drop=FALSE]
+  img.list <- imgVectortoRaster(centers, datalist)$list
+  addIMGtopanel(p, img.list)
+}
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td">PCA</td><td>K-means</td><td>H-clusters</td><td id="current>Summary - SEAS changes</td>
+</tr></table></div>
+
+## Jul-Sep day of first and last strong upwelling signal
+
+```{r}
+library(tidyr)
+grp_yrs <- years[mons%in%monvals]
+grp_date <- format(as.Date(rownames(X)[mons%in%monvals]), "%b-%d")
+first_day <- tapply(p1$clusters, grp_yrs, function(x){min(which(x==3))})
+last_day <- tapply(p1$clusters, grp_yrs, function(x){max(which(x==3))})
+df <- data.frame(year=as.numeric(names(first_day)), first_day=first_day, last_day=last_day, first_day2=grp_date[first_day], last_day2=grp_date[last_day])
+df2 <- df[,1:3] %>% pivot_longer(cols = 2:3, names_to="upwelling", values_to="day")
+ggplot(df2, aes(x=year, y=day, col=upwelling)) + 
+  geom_line() + geom_smooth(method="lm") +  
+  scale_y_continuous(breaks=seq(0,125,10),
+        labels=c("", grp_date[1:122][seq(0,125,10)]))+
+  ggtitle("First and last day of strong upwelling pattern")
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td">PCA</td><td>K-means</td><td>H-clusters</td><td id="current>Summary - SEAS changes</td>
+</tr></table></div>
+
+## Summary - Image Classification
+
+Code
+
+* GitHub: https://github.com/eeholmes/Upwelling-Image-Analysis
+* talk in talk folder under QuanSeminar.Rmd
 
 
+* PCA
+    * Very helpful in reducing the dimensionality and taking care of spatial correlation
+    * Not clear that PC1-PC2 space captures enough variation to be useful on its own
+    * Need to retry with just June-Sept data
+    * Distance from centroid might be useful...
+    
+* k-means and hierarchical clustering
+    * Identifying specific cluster (centroid images) is very helpful
+    * *Which image is most like xyz* seems like a promising approach
 
-## Summer monsoon winds drive intense upwelling off the SW coast of India
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td">PCA</td><td>K-means</td><td>H-clusters</td><td id="current>Summary</td>
+</tr></table></div>
 
-<div class="columns-2">
-  ![](images/kochi-trees-wind.png){width=100%}
-* Wind and rain
+## Summary - Changes in the SEAS
 
-  ![](images/seas-wind-vectors.png){width=100%}
-  * Strong upwelling starts from the tip and moves north
+* Image classification worked on the daily data! Daily is much noisier than monthly.
+* It seems like the upwelling season is changing
+   * shortening, or upwelling *width* is narrowing, or northern extent shrinking, or tip getting more intense
+   * Observed this with other approaches also
+* Rethink the image de-meaning and scaling (lack thereof)
+   * SST has warmed a lot, 1 to 1.5 degrees
+   
+```{r sst.up, fig.height=2}
+mon <- "April"
+a=tapply(apply(X[mons==mon,],1,mean), years[mons==mon],mean)
+df <- data.frame(year=unique(years[mons=="May"]), temp=a)
+ggplot(df, aes(x=year, y=temp)) + geom_line() + xlab("") + ylab("temperature") +
+  ggtitle(paste("mean", mon, "temperature"))
+```
 
-</div>
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td">PCA</td><td>K-means</td><td>H-clusters</td><td id="current>Summary</td>
+</tr></table></div>
+
+## {data-background="images/IMG_3389.JPG"}
+
+### eli.holmes@noaa.gov
+### github.com/eeholmes
+### eeholmes.github.io
+
+

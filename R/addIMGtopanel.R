@@ -1,5 +1,5 @@
 # N is number of panels to add to
-addIMGtopanel <- function(p1, img.list){
+addIMGtopanel <- function(p1, img.list, pal = colorRamps::matlab.like(100)){
   library(ggplot2)
 
 plot(p1)
@@ -32,7 +32,7 @@ for(rr in 1:max(rows)){
   # checkout viewport for panel i
   grid::seekViewport(p.vp)
   # draw my image
-  grid::grid.draw(grid::grobTree(grid::rasterGrob(raster::as.raster(img.list[[img.i]])), vp=vp.img))
+  grid::grid.draw(grid::grobTree(grid::rasterGrob(raster::as.raster(img.list[[img.i]], col=pal)), vp=vp.img))
   grid::grid.text(img.i, vp=vp.img2)
   img.i <- img.i+1
   if(img.i>length(img.list)) break

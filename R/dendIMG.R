@@ -1,6 +1,8 @@
 dendIMG <- function(centers, img.list, type=c("mean0", "original", "correlation"), 
-                    scale.same=FALSE, pal=colorRamps::matlab.like(20), 
-                    lab.extra=c("mean", "var", "none")){
+                    scale.same=FALSE, pal=colorRamps::matlab.like(100), 
+                    lab.extra=c("none", "mean", "var")){
+  type <- match.arg(type)
+  lab.extra <- match.arg(lab.extra)
   library(dendextend)
   n.K <- nrow(centers)
   lab.extra <- match.arg(lab.extra)
@@ -44,11 +46,11 @@ dendIMG <- function(centers, img.list, type=c("mean0", "original", "correlation"
   
 
   for(i in 1:n.K){
-    if(scale.same==FALSE) img <- as.raster(img.list[[order.dendrogram(dend)[i]]], col=pal)
+    if(scale.same==FALSE) img <- raster::as.raster(img.list[[order.dendrogram(dend)[i]]], col=pal)
     if(scale.same==TRUE){
       d <- img.list[[order.dendrogram(dend)[i]]]
-      a <- as.numeric(cut(values(d), breaks=seq(min(centers),(max(centers)),(max(centers)-min(centers))/length(pal))))
-      img <- as.raster(img.list[[order.dendrogram(dend)[i]]], col=pal[min(a, na.rm=TRUE):max(a, na.rm=TRUE)])
+      a <- as.numeric(cut(raster::values(d), breaks=seq(min(centers),(max(centers)),(max(centers)-min(centers))/length(pal))))
+      img <- raster::as.raster(img.list[[order.dendrogram(dend)[i]]], col=pal[min(a, na.rm=TRUE):max(a, na.rm=TRUE)])
     }
     img[is.na(img)] <- "#808080"
     #rasterImage(img, i-0.4, -.7, i+0.4, -.5, xpd=TRUE, lty=1, interpolate = FALSE)

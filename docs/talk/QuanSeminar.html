@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Using unsupervised image classification to study changes in seasonal upwelling in the Southeast Arabian Sea</title>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="generator" content="pandoc" />
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <base target="_blank">
+
+  <script type="text/javascript">
+    var SLIDE_CONFIG = {
+      // Slide settings
+      settings: {
+                title: 'Using unsupervised image classification to study changes in seasonal upwelling in the Southeast Arabian Sea',
+                        subtitle: 'Elizabeth Eli Holmes, NWFSC UW SAFS',
+                useBuilds: true,
+        usePrettify: true,
+        enableSlideAreas: true,
+        enableTouch: true,
+                      },
+
+      // Author information
+      presenters: [
+            ]
+    };
+  </script>
+
+  <script src="QuanSeminar_files/header-attrs-2.7/header-attrs.js"></script>
+  <link href="QuanSeminar_files/ioslides-13.5.1/fonts/fonts.css" rel="stylesheet" />
+  <link href="QuanSeminar_files/ioslides-13.5.1/theme/css/default.css" rel="stylesheet" />
+  <link href="QuanSeminar_files/ioslides-13.5.1/theme/css/phone.css" rel="stylesheet" />
+  <script src="QuanSeminar_files/ioslides-13.5.1/js/modernizr.custom.45394.js"></script>
+  <script src="QuanSeminar_files/ioslides-13.5.1/js/prettify/prettify.js"></script>
+  <script src="QuanSeminar_files/ioslides-13.5.1/js/prettify/lang-r.js"></script>
+  <script src="QuanSeminar_files/ioslides-13.5.1/js/prettify/lang-yaml.js"></script>
+  <script src="QuanSeminar_files/ioslides-13.5.1/js/hammer.js"></script>
+  <script src="QuanSeminar_files/ioslides-13.5.1/js/slide-controller.js"></script>
+  <script src="QuanSeminar_files/ioslides-13.5.1/js/slide-deck.js"></script>
+
+  <style type="text/css">
+
+    b, strong {
+      font-weight: bold;
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    summary {
+      display: list-item;
+    }
+
+    slides > slide {
+      -webkit-transition: all 0.4s ease-in-out;
+      -moz-transition: all 0.4s ease-in-out;
+      -o-transition: all 0.4s ease-in-out;
+      transition: all 0.4s ease-in-out;
+    }
+
+    .auto-fadein {
+      -webkit-transition: opacity 0.6s ease-in;
+      -webkit-transition-delay: 0.4s;
+      -moz-transition: opacity 0.6s ease-in 0.4s;
+      -o-transition: opacity 0.6s ease-in 0.4s;
+      transition: opacity 0.6s ease-in 0.4s;
+      opacity: 0;
+    }
+/* https://github.com/ropensci/plotly/pull/524#issuecomment-468142578 */
+slide:not(.current) .plotly.html-widget{
+  display: block;
+}
+
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+            pre > code.sourceCode { white-space: pre; position: relative; }
+            pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+            pre > code.sourceCode > span:empty { height: 1.2em; }
+            code.sourceCode > span { color: inherit; text-decoration: inherit; }
+            div.sourceCode { margin: 1em 0; }
+            pre.sourceCode { margin: 0; }
+            @media screen {
+            div.sourceCode { overflow: auto; }
+            }
+            @media print {
+            pre > code.sourceCode { white-space: pre-wrap; }
+            pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+            }
+            pre.numberSource code
+              { counter-reset: source-line 0; }
+            pre.numberSource code > span
+              { position: relative; left: -4em; counter-increment: source-line; }
+            pre.numberSource code > span > a:first-child::before
+              { content: counter(source-line);
+                position: relative; left: -1em; text-align: right; vertical-align: baseline;
+                border: none; display: inline-block;
+                -webkit-touch-callout: none; -webkit-user-select: none;
+                -khtml-user-select: none; -moz-user-select: none;
+                -ms-user-select: none; user-select: none;
+                padding: 0 4px; width: 4em;
+                color: #aaaaaa;
+              }
+            pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+            div.sourceCode
+              {   }
+            @media screen {
+            pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+            }
+            code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+            code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+            code span.at { color: #7d9029; } /* Attribute */
+            code span.bn { color: #40a070; } /* BaseN */
+            code span.bu { } /* BuiltIn */
+            code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+            code span.ch { color: #4070a0; } /* Char */
+            code span.cn { color: #880000; } /* Constant */
+            code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+            code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+            code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+            code span.dt { color: #902000; } /* DataType */
+            code span.dv { color: #40a070; } /* DecVal */
+            code span.er { color: #ff0000; font-weight: bold; } /* Error */
+            code span.ex { } /* Extension */
+            code span.fl { color: #40a070; } /* Float */
+            code span.fu { color: #06287e; } /* Function */
+            code span.im { } /* Import */
+            code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+            code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+            code span.op { color: #666666; } /* Operator */
+            code span.ot { color: #007020; } /* Other */
+            code span.pp { color: #bc7a00; } /* Preprocessor */
+            code span.sc { color: #4070a0; } /* SpecialChar */
+            code span.ss { color: #bb6688; } /* SpecialString */
+            code span.st { color: #4070a0; } /* String */
+            code span.va { color: #19177c; } /* Variable */
+            code span.vs { color: #4070a0; } /* VerbatimString */
+            code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+        
+  </style>
+
+  <link rel="stylesheet" href="talk.css" type="text/css" />
+
+</head>
+
+<body style="opacity: 0">
+
+<slides>
+
+  <slide class="title-slide segue nobackground">
+        <!-- The content of this hgroup is replaced programmatically through the slide_config.json. -->
+    <hgroup class="auto-fadein">
+      <h1 data-config-title><!-- populated from slide_config.json --></h1>
+      <h2 data-config-subtitle><!-- populated from slide_config.json --></h2>
+      <p data-config-presenter><!-- populated from slide_config.json --></p>
+            <p style="margin-top: 6px; margin-left: -2px;">9 Apr 2021 SAFS Quantative Seminar</p>
+          </hgroup>
+  </slide>
+
+<slide class=""><hgroup><h2>Topics</h2></hgroup><article  id="topics">
+
+<ul>
+<li>Motivation for this study</li>
+<li>Upwelling patterns</li>
+<li>Common types of unsupervised image classification
+
+<ul>
+<li>PCA</li>
+<li>K-means</li>
+<li>Hierarchical clustering</li>
+</ul></li>
+<li>Seasonal patterns of upwelling revealed by image classification</li>
+<li>Changes in upwelling in the SEAS</li>
+</ul>
+
+</article></slide><slide class=""><hgroup><h2>Why Southeast coast of India?</h2></hgroup><article  id="why-southeast-coast-of-india">
+
+<p><b>2014-2019</b> NOAA Fisheries/India Ministry of Earth Sciences joint research on improving forecasts of the indian oil sardine</p>
+
+<ul>
+<li>Hugely important fishery for India.</li>
+<li>India fishery produces 66–96% (average 80%) of the global oil sardine catch.</li>
+<li>Southeastern Arabian Sea (Kerala) produces the vast majority of that.</li>
+</ul>
+
+<p><font style="color:blue">Improving forecasts using environmental covariates: a case study on the Indian oil sardine (Sardinella longiceps), May 24th, UW Fish and Wildlife Ecology Seminars.</font></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td id="current">
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class="fill nobackground" style="background-image: url(images/incois-cmlre-map-2.png); background-size: contain; background-position: center;"><hgroup><h2></h2></hgroup><article  id="section">
+
+<div style="background-color: white">
+<p><font size="6">Southeast Arabian Sea (SEAS) off the coast of Kerala state. ca 350 miles of coastline. Dispersed non-motorized and motorized fishery. Very productive fishing region for India.</font> </font></p></div>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td id="current">
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Productivity in the SEAS is driven by seasonal upwelling</h2></hgroup><article  id="productivity-in-the-seas-is-driven-by-seasonal-upwelling">
+
+<div class="columns-2">
+<p><img width="100%" src='images/kochi-trees-wind.png' title=''/> Summer monsoon brings wind and rain</p>
+
+<p><img width="100%" src='images/seas-wind-vectors.png' title=''/> Strong upwelling starts from the tip and moves north</p></div>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td id="current">
+
+Intro - SEAS
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Coastal upwelling leads to a characteristic SST differential</h2></hgroup><article  id="coastal-upwelling-leads-to-a-characteristic-sst-differential">
+
+<center>
+
+<img width="60%" src='images/upwelling-cartoon.png' title=''/>
+
+</center>
+
+<ul>
+<li>Nutrient rich water brought to the surface</li>
+<li>Phytoplankton blooms</li>
+<li><strong>Sea surface temperature (SST) differential</strong>: Cold water along the coast and warm water off-shore</li>
+</ul>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td id="current">
+
+Intro - upwelling
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-1">
+
+<iframe width="720" height="480" src="images/Kochin_SST_2014-17_4x4.mp4" align="middle" frameborder="0" allowfullscreen>
+
+</iframe>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td id="current">
+
+Intro - upwelling
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Coastal upwelling patterns are expected to change</h2></hgroup><article  id="coastal-upwelling-patterns-are-expected-to-change">
+
+<p>Land warms faster than the ocean -&gt; changes in coastal winds</p>
+
+<div class="figure" style="text-align: center">
+<img src="images/heating-patterns.png" alt="Projected warming between 2015 and 2050" width="60%" />
+
+<p class="caption">
+
+Projected warming between 2015 and 2050
+
+</p></div>
+
+<p><font size="3"> Di Lorenzo, E. 2015. The future of coastal ocean upwelling. Nature 518, 310–311. </font></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td id="current">
+
+Intro - upwelling
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-2">
+
+<div class="columns-2">
+<h3>Can we use unsupervised image classification of sea surface temperature (SST) to study upwelling patterns and changes to those patterns?</h3>
+
+<img width="100%" src='images/SST-Sept1.png' title=''/></div>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td id="current">
+
+Intro - image classification
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Why unsupervised classification?</h2></hgroup><article  id="why-unsupervised-classification">
+
+<ul>
+<li>I am looking for change not a specific pattern</li>
+<li>I am looking for novel patterns because things are changing</li>
+<li>I worked with other upwelling metrics a lot and am looking for new approaches.</li>
+</ul>
+
+<center>
+
+<div style="float:right">
+<p><img width="40%" src='images/SST-summer.png' title=''/> <img width="40%" src='images/SST-march.png' title=''/></p></div>
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td id="current">
+
+Intro - image classification
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Today’s seminar</h2></hgroup><article  id="todays-seminar">
+
+<h3>Three types of unsupervised image classification</h3>
+
+<ul>
+<li>Principal Components Analysis (PCA) or Empirical Othogonal Factorization (EOF)</li>
+<li>K-means clustering</li>
+<li>Hierarchical clustering</li>
+</ul>
+
+<h3>Changes in the upwelling patterns in the SEAS</h3>
+
+<ul>
+<li>As revealed by the image classification</li>
+<li>Changes to the <font style="color:red">pattern</font> not absolute temperature</li>
+<li>Arabian Sea has warmed a lot in the past 2 decades. I have removed that by removing the mean from each image.</li>
+</ul>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td id="current">
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Working with images</h2></hgroup><article  id="working-with-images">
+
+<ul>
+<li>An image has \(p\) pixels</li>
+<li>Each row is an image. Each column is a pixel.</li>
+<li>Get rid of the NA (land) columns. No NAs allowed otherwise.</li>
+<li>Values are temperature with the mean temperature in that image subtracted. In some applications, you would standardize the variance to 1.</li>
+</ul>
+
+<p>Here are 5 images and just the first 10 pixels of the image.</p>
+
+<pre >##              p1    p2    p3    p4    p5    p6    p7    p8    p9   p10
+## 1979-01-01 0.11  0.01 -0.08 -0.13 -0.16 -0.15 -0.12 -0.07 -0.04 -0.03
+## 1979-02-01 0.19  0.10  0.03  0.00  0.02  0.08  0.12  0.15  0.16  0.15
+## 1979-03-01 0.14  0.07  0.04  0.04  0.10  0.18  0.27  0.33  0.34  0.30
+## 1979-04-01 0.14  0.09  0.04  0.01  0.02  0.05  0.09  0.11  0.08  0.03
+## 1979-05-01 0.01 -0.02 -0.06 -0.08 -0.09 -0.06 -0.03 -0.02 -0.03 -0.05</pre>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td id="current">
+
+Intro - images
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>PCA (and EOF)</h2></hgroup><article  id="pca-and-eof">
+
+<ul>
+<li>Each image (a data set with \(p\) variables) can be expressed as the weighted sum of orthogonal images (i.e. independent).</li>
+<li>The vector is length \(p\) (number of pixels)</li>
+<li>The first vector captures most of the variance in the images.</li>
+</ul>
+
+\[\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3 + \dots\] <em>For those familiar with singular value decomposition</em> \[
+\underbrace{\mathbf{X}}_{\text{data}}= \underbrace{\mathbf{U}\,\,\mathbf{D}}_{\alpha}
+\underbrace{\mathbf{V}^\top}_{\lambda}
+\]
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - overview
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Classic example is facial recognition: eigenfaces</h2></hgroup><article  id="classic-example-is-facial-recognition-eigenfaces">
+
+<center>
+
+<img width="75%" src='images/eigenfacesB.png' title=''/> <img width="75%" src='images/eigenfaces-vectors.png' title=''/>
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - overview
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>PCA and EOF also used in oceanography</h2></hgroup><article  id="pca-and-eof-also-used-in-oceanography">
+
+<p>Pacific Decadal Oscillation index is an example. It is the weighting (\(\alpha\)) on the first \(\lambda\) from gridded SST anomalies in the North Pacific.</p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - overview
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Let’s see how to do it</h2></hgroup><article  id="lets-see-how-to-do-it">
+
+<!--
+With Singular Value Decomposition:
+
+```r
+pca <- svd(X_norm) #singular value decomposition
+eigenimages <- t(pca$v)
+rownames(eigenimages) <- paste0("lambda", 1:nrow(eigenimages))
+alpha <- pca$u %*% diag(pca$d)
+colnames(alpha) <- paste0("PC", 1:ncol(alpha))
+```
+-->
+
+<p>Let’s use <code>prcomp</code> in R. Using <code>prcomp</code> means you can use the visualization tools in R for PCA.</p>
+
+<pre class = 'prettyprint lang-r'>prcomp.pca &lt;- prcomp(X_norm, scale = FALSE, center=FALSE)</pre>
+
+<ul>
+<li>The \(\lambda\) are in <code>prcomp.pca$rotation</code> with each column an &ldquo;eigen image&rdquo;.</li>
+<li>The \(\alpha\) are in <code>prcomp.pca$x</code>. One for each image and each \(\lambda\).</li>
+</ul>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - sst images
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-3">
+
+<p>Eigen images. Just first 10 pixels of the image are shown.</p>
+
+<pre class = 'prettyprint lang-r'>eigenimages &lt;- t(prcomp.pca$rotation)
+round(eigenimages[1:5, 1:10], digits=2)</pre>
+
+<pre >##        p1    p2    p3    p4    p5    p6    p7    p8    p9   p10
+## PC1  0.06  0.06  0.05  0.05  0.04  0.04  0.04  0.04  0.04  0.03
+## PC2 -0.06 -0.06 -0.07 -0.07 -0.08 -0.08 -0.08 -0.07 -0.07 -0.07
+## PC3  0.02  0.01  0.00 -0.01 -0.02 -0.01 -0.01  0.00  0.01  0.01
+## PC4 -0.02 -0.02 -0.02 -0.02 -0.04 -0.05 -0.05 -0.06 -0.05 -0.04
+## PC5  0.00  0.01  0.02  0.02  0.03  0.03  0.03  0.03  0.03  0.04</pre>
+
+<pre ># if image is say 25x25
+library(raster)
+img &lt;- as.raster(matrix(eigenimages[1,], byrow=TRUE, ncol=25))
+plot(img)</pre>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - sst images
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-4">
+
+<center>
+
+<img src="QuanSeminar_files/figure-html/unnamed-chunk-9-1.png" width="720" style="display: block; margin: auto;" />
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - eigen images
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Reconstructing the SST images</h2></hgroup><article  id="reconstructing-the-sst-images">
+
+<!--
+$$\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3 + \dots$$
+-->
+
+<p>image = \(\alpha_1 \times\) <img src="images/eigen1.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + \(\alpha_2 \times\) <img src="images/eigen2.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + \(\alpha_3 \times\) <img src="images/eigen3.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + \(\dots\)</p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - reconstuction
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>August</h2></hgroup><article  id="august">
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-12-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - reconstuction
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>March</h2></hgroup><article  id="march">
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-13-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - reconstuction
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>May</h2></hgroup><article  id="may">
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-14-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - reconstuction
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Variance (in data set) explained</h2></hgroup><article  id="variance-in-data-set-explained">
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-15-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - explained variance
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>SST Anomaly pattern in the PC1-PC2 space</h2></hgroup><article  id="sst-anomaly-pattern-in-the-pc1-pc2-space">
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-16-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - PC 1&amp;2
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-5">
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-17-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - seasonal pattern
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>1980s versus 2010s</h2></hgroup><article  id="s-versus-2010s">
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-18-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-6">
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-19-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-7">
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-20-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Sep and Aug seem to be changing</h2></hgroup><article  id="sep-and-aug-seem-to-be-changing">
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-22-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>August images</h2></hgroup><article  id="august-images">
+
+<center>
+
+<img src="QuanSeminar_files/figure-html/unnamed-chunk-23-1.png" width="720" style="display: block; margin: auto;" />
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Outlier identification</h2></hgroup><article  id="outlier-identification">
+
+<p>Use the first 10 dimensions.</p>
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-25-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>March images</h2></hgroup><article  id="march-images">
+
+<center>
+
+<img src="QuanSeminar_files/figure-html/unnamed-chunk-26-1.png" width="720" style="display: block; margin: auto;" />
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td id="current">
+
+PCA - upwelling changes
+
+</td>
+
+<td>
+
+K-means
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>K-means clustering</h2></hgroup><article  id="k-means-clustering">
+
+<center>
+
+<img width="100%" src='images/kmeans.gif' title=''/>
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - intro
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-8">
+
+<center>
+
+<img width="90%" src='images/2-pixel.png' title=''/>
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - intro
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-9">
+
+<center>
+
+<img width="90%" src='images/3-pixel.png' title=''/>
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - intro
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-10">
+
+<center>
+
+<img width="90%" src='images/p-pixel.png' title=''/>
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - intro
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Let’s try it</h2></hgroup><article  id="lets-try-it">
+
+<p>We need to choose the number of centers. I will start with 12 — big enough to capture most of the variability (which I discovered through trial and error).</p>
+
+<pre class = 'prettyprint lang-r'>set.seed(1221966)
+n_K &lt;- 12
+out_norm &lt;- kmeans(X_norm, n_K, iter.max=25, nstart=100)</pre>
+
+<ul>
+<li>The centroid images are in <code>out$centers</code>. Each row is an image.</li>
+</ul>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - sst images
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2></h2></hgroup><article  id="section-11">
+
+<center>
+
+<img src="QuanSeminar_files/figure-html/unnamed-chunk-30-1.png" width="720" style="display: block; margin: auto;" />
+
+</center>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - centroids
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Distances between the images</h2></hgroup><article  id="distances-between-the-images">
+
+<p>Distance based on correlation.</p>
+
+<p><img src="QuanSeminar_files/figure-html/unnamed-chunk-32-1.png" width="720" style="display: block; margin: auto;" /></p>
+
+<div id="footer">
+<table class="fTable">
+
+<tr>
+
+<td>
+
+Intro
+
+</td>
+
+<td>
+
+PCA
+
+</td>
+
+<td id="current">
+
+K-means - distance
+
+</td>
+
+<td>
+
+H-clusters
+
+</td>
+
+<td>
+
+Summary
+
+</td>
+
+</tr>
+
+</table></div>
+
+</article></slide><slide class=""><hgroup><h2>Summer monsoon winds drive intense upwelling off the SW coast of India</h2></hgroup><article  id="summer-monsoon-winds-drive-intense-upwelling-off-the-sw-coast-of-india">
+
+<div class="columns-2">
+<p><img width="100%" src='images/kochi-trees-wind.png' title=''/> * Wind and rain</p>
+
+<p><img width="100%" src='images/seas-wind-vectors.png' title=''/> * Strong upwelling starts from the tip and moves north</p></div></article></slide>
+
+
+  <slide class="backdrop"></slide>
+
+</slides>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+<!-- map slide visiblity events into shiny -->
+<script>
+  (function() {
+    if (window.jQuery) {
+       window.jQuery(document).on('slideleave', function(e) {
+         window.jQuery(e.target).trigger('hidden');
+      });
+       window.jQuery(document).on('slideenter', function(e) {
+         window.jQuery(e.target).trigger('shown');
+      });
+    }
+  })();
+</script>
+
+</body>
+</html>

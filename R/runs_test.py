@@ -111,3 +111,9 @@ def runs_test(input, path = True):
     print "p-val %.10f" % pval
     return pval
 
+'''
+# from python script or {python} in Rmarkdown
+runs_test(["B","B","A","C","C","A","C","C","C","A","B","A","A","A","B","A","A","B","B","A","B","A","A","B","A","B","B"])
+#from R command line
+reticulate::py_run_string("pval=runs_test(r.x)")
+'''
