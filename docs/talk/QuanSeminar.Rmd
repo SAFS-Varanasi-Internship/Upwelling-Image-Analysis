@@ -1,0 +1,1242 @@
+---
+title: "Using unsupervised image classification to study changes in seasonal upwelling in the Southeast Arabian Sea"
+subtitle: "Elizabeth Eli Holmes, NWFSC UW SAFS"
+date: "9 Apr 2021 SAFS Quantative Seminar"
+output:
+  ioslides_presentation:
+    css: talk.css
+    self_contained: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, cache=TRUE, fig.align="center", message=FALSE)
+library(knitr)
+library(ggplot2)
+library(factoextra)
+library(dplyr)
+library(tidyr)
+library(raster)
+library(tmap)
+library(png)
+library(gridExtra)
+library(dendextend)
+library(DescTools)
+source(file.path(here::here(), "R", "imgVectortoRaster.R"))
+source(file.path(here::here(), "R", "dendIMG.R"))
+source(file.path(here::here(), "R", "myheatmap.R"))
+source(file.path(here::here(), "R", "desat.R"))
+source(file.path(here::here(), "R", "kheatmap.R"))
+source(file.path(here::here(), "R", "addIMGtopanel.R"))
+source(file.path(here::here(), "R", "yearTable.R"))
+# Code to download data from ERDDAP servers is in data folder
+```
+
+## Why Southeast coast of India?
+
+<b>2014-2019</b> NOAA Fisheries/India Ministry of Earth Sciences joint research on improving forecasts of the indian oil sardine
+
+* Very important fishery for India. 
+* India fishery produces 66–96% (average 80%) of the global oil sardine catch. 
+* Southeastern Arabian Sea produces the vast majority of this.
+* Upwelling drives productivity in this system.
+* I know a lot about this upwelling system.
+
+<font style="color:blue">Improving forecasts using environmental covariates: a case study on the Indian oil sardine (Sardinella longiceps), May 24th, UW Fish and Wildlife Ecology Seminars.</font>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## {data-background="images/incois-cmlre-map-2.png"}
+
+<div style="background-color: white">
+<font size="6">**Study Area** Southeast Arabian Sea (SEAS) off the coast of Kerala. ca 350 miles of coastline. Dispersed non-motorized and motorized fishery.</font>
+</font>
+</div>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro - SEAS</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+## Productivity in the SEAS is driven by seasonal upwelling
+
+<div class="columns-2">
+  ![](images/kochi-trees-wind.png){width=100%}
+Summer monsoon brings wind and rain
+
+  ![](images/seas-wind-vectors.png){width=100%}
+Strong upwelling starts from the tip and moves north
+</div>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro - SEAS</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Coastal upwelling
+
+<center>
+![](images/upwelling-cartoon.png){width=60%}
+</center>
+
+* Nutrient rich water brought to the surface
+* Phytoplankton blooms
+* **Sea surface temperature (SST) differential**: Cold water along the coast and warm water off-shore
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro - upwelling</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+##
+
+<iframe width="720" height="480" src="images/Kochin_SST_2014-17_4x4.mp4" align="middle" frameborder="0" allowfullscreen></iframe>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Changing coastal upwelling patterns
+
+Land warms faster than the ocean -> changes in coastal winds
+
+```{r, fig.align="center", out.width="50%", fig.cap="Projected warming between 2015 and 2050"}
+include_graphics("images/heating-patterns.png")
+```
+
+<font size="3"> 
+Di Lorenzo, E. 2015. The future of coastal ocean upwelling. Nature 518, 310–311.
+</font>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## 
+
+<div class="columns-2">
+
+### Can we use unsupervised image classification of sea surface temperature (SST) to study upwelling patterns and changes to those patterns?
+
+![](images/SST-Sept1.png){width=100%}
+
+</div>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+## Why unsupervised classification?
+
+* Looking for novel patterns
+* Looking for change rather than specific patterns
+
+<center>
+<div style="float:right">
+![](images/SST-summer.png){width=40%}
+![](images/SST-march.png){width=40%}
+</div>
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+##
+
+![](images/innovation_funnel.jpg){width=100%}
+
+
+## Overview
+
+**Pilot project** - fall 2020 by Jacob Zikan (Dartmouth College), k-means analyses as an undergrad project for a machine learning class.
+
+**Phase 2** - extending that to other classification algorithms
+
+* Three types of unsupervised image classification
+  * PCA, K-means, Hierarchical clustering
+* Seasonal patterns of upwelling
+* Changes in upwelling in the SEAS
+* https://github.com/eeholmes/Upwelling-Image-Analysis/talk/QuanSeminar.Rmd
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Three types of unsupervised image classification
+
+* Principal Components Analysis (PCA) decomposition
+* K-means clustering
+* Hierarchical clustering
+
+### Notes
+
+* Changes to the <font style="color:red">pattern</font> not absolute temperature
+* Arabian Sea has warmed 1-2 deg C in the past 2 decades.
+* I removed the mean from each image.
+* **monthly** images in most of the talk, but **daily** at the end
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+## Working with images
+
+* An image has $p$ pixels
+* Each row is an image. Each column is a pixel. 
+* Get rid of the NA (land) columns.
+* Values are temperature minus image mean temperature. 
+
+Here are 5 images and just the first 10 pixels of the image.
+
+```{r echo=FALSE}
+# Data
+datafile <- file.path(here::here(), "data", "SEAS-monthly-sst.RData")
+load(datafile)
+datalist <- out
+# Data for clustering functions
+Data_clean <- out$dat.clean
+Data_dirty <- out$dat
+pos_loc <- out$pos.loc
+X <- Data_clean[c(-1,-2),] - 273.15 #Kelvin in ERA5
+dates <- as.Date(rownames(X))
+years <- as.numeric(format(dates, "%Y"))
+X_norm <- t(scale(t(X), scale=FALSE))
+colnames(X_norm) <- colnames(X) <- paste0("p", 1:ncol(X_norm))
+dates <- as.Date(rownames(X))
+years <- as.numeric(format(dates, "%Y"))
+mons <- format(dates, "%B")
+yearrange <- min(years):max(years)
+```
+
+```{r echo=FALSE}
+round(X_norm[1:5, 1:10], digits=2)
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td id="current">Intro - images</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## PCA (and EOF)
+
+* Each image (a data set with $p$ variables) can be expressed as the weighted sum of orthogonal images ($\lambda$).
+* The first $\lambda$ captures most of the variance in the images.
+
+$$\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3 + \dots$$
+*For those familiar with singular value decomposition*
+$$
+\underbrace{\mathbf{X}}_{\text{data}}= \underbrace{\mathbf{U}\,\,\mathbf{D}}_{\alpha}
+\underbrace{\mathbf{V}^\top}_{\lambda}
+$$
+
+*For those familiar with PDO index* That's another example of PCA decomposition on gridded SST data.
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - overview</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Classic example is facial recognition: eigenfaces
+
+<center>
+![](images/eigenfacesB.png){width=75%}
+![](images/eigenfaces-vectors.png){width=75%}
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - overview</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+
+## Let's see how to do it
+
+<!--
+With Singular Value Decomposition:
+```{r echo=TRUE}
+pca <- svd(X_norm) #singular value decomposition
+eigenimages <- t(pca$v)
+rownames(eigenimages) <- paste0("lambda", 1:nrow(eigenimages))
+alpha <- pca$u %*% diag(pca$d)
+colnames(alpha) <- paste0("PC", 1:ncol(alpha))
+```
+-->
+
+Let's use `prcomp` in R. Using `prcomp` means you can use the visualization tools in R for PCA.
+```{r echo=TRUE}
+prcomp.pca <- prcomp(X_norm, scale = FALSE, center=FALSE)
+```
+
+```{r}
+# Do this so the first image looks like upwelling
+prcomp.pca$rotation[,1] <- -1*prcomp.pca$rotation[,1]
+prcomp.pca$x[,1] <- -1*prcomp.pca$x[,1]
+# Store for use later
+eigenimages <- t(prcomp.pca$rotation)
+alpha <- prcomp.pca$x
+```
+
+```{r echo=FALSE, warning=FALSE}
+# Set up the data frame
+library(tidyr)
+df <- data.frame(alpha,
+                date=as.Date(rownames(X_norm)),
+                year=as.integer(format(as.Date(rownames(X_norm)), "%Y")),
+                mon=factor(format(as.Date(rownames(X_norm)), "%b"), levels=month.abb),
+                decade=cut(as.integer(format(as.Date(rownames(X_norm)), "%Y")), breaks=seq(1970,2020,10), labels=c("71-80", "81-90", "91-00", "01-10", "11-20")))
+df2 = pivot_longer(df, starts_with("PC"), names_to="PC", values_to="value")
+```
+
+* The $\lambda$ are in `prcomp.pca$rotation` with each column an "eigen image".
+* The $\alpha$ are in `prcomp.pca$x`. One for each image and each $\lambda$.
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+##
+
+Eigen images. Just first 10 pixels of the image are shown.
+```{r echo=TRUE}
+eigenimages <- t(prcomp.pca$rotation)
+round(eigenimages[1:5, 1:10], digits=2)
+```
+
+```
+# if image is say 25x25
+library(raster)
+img <- as.raster(matrix(eigenimages[1,], byrow=TRUE, ncol=25))
+plot(img)
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - eigen images</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+##
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+img.list <- imgVectortoRaster(eigenimages, datalist)$list
+```
+
+<center>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+p_stack <- raster::stack(img.list[[1]], img.list[[2]], img.list[[3]], 
+                 img.list[[4]], img.list[[5]], img.list[[6]])
+library(tmap)
+pal <- colorRamps::matlab.like(100)
+tm_shape(p_stack) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = paste("PC", 1:length(p_stack))) +
+  tm_layout(main.title = "Eigen Images", title.size = 1)
+```
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - eigen images</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+
+## Reconstructing the SST images
+
+```{r message=FALSE, warning=FALSE, eval=TRUE}
+library(png)
+library(raster)
+for(i in 1:6){
+png(filename=paste0("images/eigen",i,".png"))
+plot(img.list[[i]], legend=FALSE, axes=FALSE, box=FALSE, col=pal)
+dev.off()
+}
+```
+
+<!--
+$$\text{image} = \alpha_1 \lambda_1 + \alpha_2 \lambda_2 + \alpha_3 \lambda_3 + \dots$$
+-->
+
+image =  $\alpha_1 \times$ <img src="images/eigen1.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + $\alpha_2 \times$ <img src="images/eigen2.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + $\alpha_3 \times$ <img src="images/eigen3.png"  width="100" height="100" style="display: inline-block; margin: 0; vertical-align:middle" /> + $\dots$
+
+
+```{r}
+#reconstruction
+ncomp1 <- 1
+RE1 <- alpha[,1:ncomp1, drop=FALSE] %*% eigenimages[1:ncomp1,, drop=FALSE]
+ncomp2 <- 2
+RE2 <- alpha[,1:ncomp2] %*% eigenimages[1:ncomp2,]
+ncomp3 <- 10
+RE3 <- alpha[,1:ncomp3] %*% eigenimages[1:ncomp3,]
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - reconstuction</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+## August
+
+```{r echo=FALSE}
+i <- which(rownames(X_norm)=="1987-08-01")
+img1 <- imgVectortoRaster(rbind(X_norm[i,], RE1[i,], RE2[i,], RE3[i,]), datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = c("True", paste(c(ncomp1, ncomp2, ncomp3),"PC")),
+            title=rownames(X_norm)[i])
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - reconstuction</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## March
+
+```{r echo=FALSE}
+i <- which(rownames(X_norm)=="1987-03-01")
+img1 <- imgVectortoRaster(rbind(X_norm[i,], RE1[i,], RE2[i,], RE3[i,]), datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = c("True", paste(c(ncomp1, ncomp2, ncomp3),"PC")),
+            title=rownames(X_norm)[i])
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - reconstuction</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+## May
+
+```{r echo=FALSE}
+i <- which(rownames(X_norm)=="1987-05-01")
+img1 <- imgVectortoRaster(rbind(X_norm[i,], RE1[i,], RE2[i,], RE3[i,]), datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = c("True", paste(c(ncomp1, ncomp2, ncomp3),"PC")),
+            title=rownames(X_norm)[i])
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - reconstuction</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Variance (in data set) explained
+
+```{r}
+fviz_eig(prcomp.pca) + xlab("Principal Components") + ggtitle("")
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA -  variance</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## SST Anomaly pattern in the PC1-PC2 space
+
+```{r echo=FALSE, warning=FALSE}
+wid <- 1.25
+p <- ggplot(df, aes(x=PC1, y=PC2)) + geom_point(col=NA)
+xs <- seq(min(df$PC1)+.2*wid,max(df$PC1), 2.2*wid)
+ys <- seq(min(df$PC2)+.2*wid,max(df$PC2), 2.2*wid)
+for(i in xs){
+  for(j in ys){
+  x <- c(i, j)
+    img.list <- imgVectortoRaster(t(prcomp.pca$rotation[,1:2] %*% matrix(x, ncol=1)), datalist)$list
+    img <- raster::as.raster(img.list[[1]])
+    img[is.na(img)] <- "#808080"
+    g <- grid::rasterGrob(img, interpolate=TRUE)
+    p <- p +
+      annotation_custom(g, xmin=x[1]-wid, xmax=x[1]+wid, ymin=x[2]-wid, ymax=x[2]+wid)
+  }
+}
+p + 
+  geom_hline(yintercept=0) +
+  geom_vline(xintercept=0)
+```   
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - PC 1&2</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+##
+
+```{r echo=FALSE, warning=FALSE}
+fviz_pca_ind(prcomp.pca,
+             col.ind = factor(format(as.Date(rownames(X_norm)), "%B"), levels=month.name),
+             geom="point",
+             addEllipses=TRUE
+             ) + ggtitle("PC1/PC1 loadings (+ = upwelling) by month")
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - seasonal pattern</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## 1980s versus 2010s
+
+```{r echo=FALSE, warning=FALSE}
+p <- ggplot(subset(df, decade%in%c("81-90","11-20")), aes(x=PC1, y=PC2, col=decade)) +
+  geom_point() +
+  geom_hline(yintercept=0) +
+  geom_vline(xintercept=0) +
+  facet_wrap(~mon) +
+  ggtitle("1980s versus 2010s")
+p
+```
+
+PC1: <img src="images/eigen1.png"  width="75" height="75" style="display: inline-block; margin: 0; vertical-align:middle" />  PC2: <img src="images/eigen2.png"  width="75" height="75" style="display: inline-block; margin: 0; vertical-align:middle" />
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA -  change</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+##
+
+```{r echo=FALSE}
+p <- ggplot(subset(df2, PC %in% c("PC1")), aes(x=date, y=value, fill=value>0)) +
+  geom_col(width=300) +
+  facet_wrap(~mon) +
+  xlab("") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        legend.position = "none") +
+  ggtitle("PC1 loadings")
+
+p
+```
+
+PC1: <img src="images/eigen1.png"  width="75" height="75" style="display: inline-block; margin: 0; vertical-align:middle" />
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA -  change</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+##
+
+```{r echo=FALSE}
+df3 <- subset(df2, PC %in% c("PC1"))
+df3 <- df3 %>% group_by(mon) %>%
+  mutate(center=value-mean(value),
+         mean=mean(value))
+df3$lab <- factor(paste(df3$mon, round(df3$mean, digits=2)),
+                  levels=paste(month.abb, round(tapply(df3$mean, df3$mon, unique), digits=2)))
+                  
+p <- ggplot(df3, aes(x=date, y=center, fill=center>0)) +
+  geom_col(width=300) +
+  facet_wrap(~lab) +
+  xlab("") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        legend.position = "none") +
+  ggtitle("PC1 loadings relative to mean")
+
+p
+```
+
+PC1: <img src="images/eigen1.png"  width="75" height="75" style="display: inline-block; margin: 0; vertical-align:middle" />
+
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA -  change</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Sep and Aug seem to be changing
+
+```{r warning=FALSE, message=FALSE}
+ncomp <- 1:2
+df4 <- subset(df2, PC %in% paste0("PC", ncomp))
+df4$PC <- factor(df4$PC, level=paste0("PC", ncomp))
+df4 <- df4 %>% group_by(PC, mon) %>%
+  mutate(mean=mean(value),
+         err=value-mean)
+df5 <- df4 %>% group_by(mon, date) %>% 
+  summarize(distance=sqrt(sum(err^2)))
+```
+
+```{r}
+ggplot(df5, aes(x=date, y=distance)) + geom_point() +
+  geom_smooth(span = 0.9) + xlab("") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  ggtitle("Distance moved in PC1-PC2 space") +
+  facet_wrap(~mon)
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA -  change</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## August images
+
+<center>
+```{r}
+loc <- which(rownames(X_norm)%in%paste0(1980:2019,"-08-01"))
+img1 <- imgVectortoRaster(X_norm[loc,], datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = rownames(X_norm)[loc])
+```
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - change</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+## Outlier identification using distance from center
+
+```{r warning=FALSE, message=FALSE}
+ncomp <- 1:10
+df4 <- subset(df2, PC %in% paste0("PC", ncomp))
+df4$PC <- factor(df4$PC, level=paste0("PC", ncomp))
+df4 <- df4 %>% group_by(PC, mon) %>%
+  mutate(mean=mean(value),
+         err=value-mean)
+df5 <- df4 %>% group_by(mon, date) %>% 
+  summarize(distance=sqrt(sum(err^2)))
+```
+
+```{r}
+ggplot(df5, aes(x=date, y=distance)) + geom_point() +
+  geom_smooth(span = 0.9) + xlab("") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
+  ggtitle("Distance moved in PC 1 to 10 space") +
+  facet_wrap(~mon)
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - outliers</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## March images
+
+<center>
+```{r}
+loc <- which(rownames(X_norm)%in%paste0(1980:2019,"-03-01"))
+img1 <- imgVectortoRaster(X_norm[loc,], datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = rownames(X_norm)[loc])
+```
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - outliers</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## PCA summary
+
+* Nice way to summarize an image with a few dimensions
+* Nice visual of the seasonal cycle
+* Dimension reduction and deals with spatial correlation
+* July and August seem to be changing
+* A few outlier months
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td id="current">PCA - summary</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## K-means clustering
+
+<center>
+![](images/kmeans.gif){width=100%}
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - intro</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+##
+
+<center>
+![](images/2-pixel.png){width=90%}
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - intro</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+##
+
+<center>
+![](images/3-pixel.png){width=90%}
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - intro</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+##
+
+<center>
+![](images/p-pixel.png){width=90%}
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - intro</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Let's try it
+
+We need to choose the number of centers. I will start with 12 --- big enough to capture most of the variability (which I discovered through trial and error).
+
+```{r echo=TRUE}
+set.seed(1221966)
+n_K <- 12
+out_norm <- kmeans(X_norm, n_K, iter.max=25, nstart=100)
+```
+
+* The centroid images are in `out_norm$centers`. Each row is an image.
+* Which cluster each image belongs to is in `out_norm$cluster`
+
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - sst images</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## First 5 pixels of first 5 centroids
+
+```{r echo=TRUE}
+centroidimages_norm <- out_norm$centers
+rownames(centroidimages_norm) <- paste("Centroid", 1:n_K)
+round(centroidimages_norm[1:5, 1:5], digits=2)
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - sst images</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+##
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+img_norm <- imgVectortoRaster(centroidimages_norm, datalist)
+img.stack.norm <- img_norm$stack
+img.list.norm <- img_norm$list
+```
+
+<center>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(tmap)
+pal <- colorRamps::matlab.like(100)
+tm_shape(img.stack.norm) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = paste("Centroid", 1:length(p_stack))) +
+  tm_layout(main.title = "Centroid Images", title.size = 1)
+```
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - centroids</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Distances between the images
+
+Distance based on Euclidian distance. 
+
+```{r warning=FALSE}
+p12 <- kheatmap(12, X_norm, datalist, main.n=5, plotit=FALSE, dend.type="original")
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - distance</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+## Seasonal heat map
+
+```{r message=FALSE}
+p12$heatmap
+```
+
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - heatmap</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Different # of centers (5 main groups)
+
+```{r include=FALSE, warning=FALSE}
+p5 <- kheatmap(5, X_norm, datalist, main.n=5, plotit=FALSE)$heatmap
+p12 <- kheatmap(12, X_norm, datalist, main.n=5, plotit=FALSE)$heatmap
+p18 <- kheatmap(18, X_norm, datalist, main.n=5, plotit=FALSE)$heatmap
+p22 <- kheatmap(22, X_norm, datalist, main.n=5, plotit=FALSE)$heatmap
+```
+
+```{r echo=FALSE}
+library(gridExtra)
+thm <- theme(legend.position = "none", axis.title = element_blank(), axis.text = element_blank())
+add <- geom_hline(yintercept=6, col="red", alpha=0.3)
+add2 <- annotate("text", 2022, 1:12, label=stringr::str_sub(month.abb,1,1), hjust=0)
+add3 <- annotate("text", c(1985, 1985, 2005, 2000), c(3.5, 6, 8, 11), 
+                 label=c("cold N tongue", "cold tip", "upwelling", "uniform"), 
+                 color=c("black", "white", "black", "black"))
+grid.arrange(p5+thm+ggtitle("K = 5")+add+add3,
+             p12+thm+ggtitle("K = 12")+add+add2+add3,
+             p18+thm+ggtitle("K = 18")+add+add3,
+             p22+thm+ggtitle("K = 22")+add+add2+add3)
+```
+
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - heatmap</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## K-means summary
+
+* How the pattern is changing depends somewhat on how may centers (how fine a scale).
+* July, August and September have consistent upwelling patterns but strength of the temperature differential changes
+* October hard to place in a group (moves around depending on number of centers)
+* May also different in first versus second half
+* **Transition** months
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - heatmap</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+## Raw temperature patterns
+
+```{r}
+p12 <- kheatmap(12, X, datalist, main.n=4, sub.n=4, plotit=FALSE, ramp="mean", ramp.type=1, dend.type="mean0")
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - seasonal</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Raw temperature seasonal pattern
+
+Blue, green, grey are upwelling patterns (colder to warmer). Red (hot) and orange (warm) are uniform patterns.
+
+```{r}
+p12$heatmap
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td id="current">K-means - seasonal</td><td>H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Hierarchical clustering
+
+<center>
+![](images/hierarch.gif)
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td id="current">H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+## Let's try it
+
+* I am going to cluster on the raw images, but later I will be clustering on the Principal Components so that I have orthogonal variables.
+* I am also going to use Euclidian distance. I've tried a bunch. At this point, I don't see that huge of a difference.
+
+```{r echo=TRUE}
+ncomp <- 20
+d <- dist(X_norm, method = "euclidian")
+clus <- hclust(d)
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td id="current">H-clusters</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## `method="ward.D2"` default
+
+This method tries to make compact clusters of similar size.
+
+```{r warning=FALSE}
+clus <- hclust(d, method="ward.D2")
+dend <- as.dendrogram(clus)
+nodePar <- list(lab.cex = 0.6, pch = c(NA, 19), 
+                cex = 0.2, col = "blue")
+library(dendextend)
+dend %>%
+  set("labels_col", value = c("skyblue", "orange", "grey","red", "black"), k=3) %>%
+  set("branches_k_color", value = c("skyblue", "orange", "grey", "red", "black"), k = 3) %>%
+  plot(horiz=TRUE, axes=FALSE, ylab = "", xlab="Distance", 
+     nodePar = nodePar, leaflab = "none", main="method='ward.D2'")
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td id="current">H-clusters - ward</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## `method="complete"` default
+
+This method allows you to find outliers.
+
+```{r}
+clus <- hclust(d)
+dend <- as.dendrogram(clus)
+nodePar <- list(lab.cex = 0.6, pch = c(NA, 19), 
+                cex = 0.2, col = "blue")
+library(dendextend)
+dend %>%
+  set("labels_col", value = c("skyblue", "orange", "grey","red", "black"), k=5) %>%
+  set("branches_k_color", value = c("skyblue", "orange", "grey", "red", "black"), k = 5) %>%
+  plot(horiz=TRUE, axes=FALSE, ylab = "", xlab="Distance", 
+     nodePar = nodePar, leaflab = "none", main="method='complete'")
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td id="current">H-clusters - complete</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## `method="complete"` default
+
+centroid image is the mean (by pixel) of all images within a cluster.
+
+```{r}
+K <- 5
+clus <- hclust(d, method="complete")
+sub_grp <- cutree(clus, k = K)
+centers <- apply (X_norm, 2, function (x) tapply (x, sub_grp, mean))
+img.list <- imgVectortoRaster(centers, datalist)$list
+dendIMG(centers, img.list, lab.extra="none")
+```
+   
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td id="current">H-clusters - centroids</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## `method="ward.D2"` 
+
+```{r}
+K <- 5
+clus <- hclust(d, method="ward.D2")
+sub_grp <- cutree(clus, k = K)
+centers <- apply (X_norm, 2, function (x) tapply (x, sub_grp, mean))
+img.list <- imgVectortoRaster(centers, datalist)$list
+dendIMG(centers, img.list, lab.extra="none")
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td id="current">H-clusters - centroids</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Summary for hierarchical clustering
+
+* Allows you to get a better understanding of the structure
+* Overall not that different from patterns from k-means
+* Does better than k-means at outlier identification using `method="complete"`
+* `method="complete"` also doesn't try to make similar size clusters
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td id="current">H-clusters - summary</td><td>SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Upwelling changes in the SEAS
+
+**Daily** SST from the NOAA IOSST AVHRR-only data set.
+
+```{r echo=FALSE}
+# Data
+datafile <- file.path(here::here(), "data", "SEAS-daily-sst-1981-2020.RData")
+load(datafile)
+datalist <- out
+# Data for clustering functions
+Data_clean <- out$dat.clean
+Data_dirty <- out$dat
+pos_loc <- out$pos.loc
+#X <- Data_clean[c(-1,-2),] - 273.15
+X <- Data_clean[c(-1,-2),]
+dates <- as.Date(rownames(X))
+years <- as.numeric(format(dates, "%Y"))
+X <- X[years>1981,]
+X_norm <- t(scale(t(X), scale=FALSE))
+colnames(X_norm) <- colnames(X) <- paste0("p", 1:ncol(X_norm))
+dates <- as.Date(rownames(X))
+years <- as.numeric(format(dates, "%Y"))
+wks <- as.numeric(strftime(dates, format = "%V"))
+mons <- format(dates, "%B")
+yearrange <- min(years):max(years)
+```
+
+<center>
+```{r eval=FALSE}
+loc <- which(rownames(X)%in%paste0(1980:2019,"-08-01"))
+img1 <- imgVectortoRaster(X[loc,], datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = rownames(X_norm)[loc]) +
+  ggtitle("August 1 images")
+```
+</center>
+
+### August 1st demeaned images 1982-2020
+<center>
+```{r}
+loc <- which(rownames(X)%in%paste0(1980:2019,"-08-01"))
+img1 <- imgVectortoRaster(X_norm[loc,], datalist)$stack
+tm_shape(img1) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = rownames(X_norm)[loc]) +
+  ggtitle("August 1 images")
+```
+</center>
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td id="current">SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+## Jun-Sep # of days with upwelling signal
+
+* PCA on the full data set: daily Jan 1982 to Dec 2020
+* Use the first 20 Principal Components to decribe the images
+* Look at June to Sept months only
+* Divide Jul-Sep images using hierarchical Clustering with `method="complete"` into 3 groups.
+* Number of days that are in each cluster
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td id="current">SEAS</td><td>Summary</td>
+</tr></table></div>
+
+
+## Jun-Sep # of days with upwelling signal
+
+```{r}
+prcomp.pca <- prcomp(X_norm, scale = FALSE, center=FALSE)
+eigenimages <- t(prcomp.pca$rotation)
+alpha <- prcomp.pca$x
+```
+
+```{r}
+ncomp <- 20
+monvals <- month.name[6:9]
+for(meth in c("hclust.complete")){
+  p1 <- yearTable(alpha[mons%in%monvals,1:ncomp], 
+                  method=meth, K=3, 
+                  dist.type="euclidian")
+  #p <- p1$p+geom_smooth(method = "lm", se = TRUE)+ggtitle(meth)
+  p <- p1$p + geom_smooth(span = 0.3)+
+    ggtitle(paste0("Number of days in each pattern in June-Sept (", meth, ")"))
+  centers <- p1$centers %*% eigenimages[1:ncomp,, drop=FALSE]
+  img.list <- imgVectortoRaster(centers, datalist)$list
+  addIMGtopanel(p, img.list)
+}
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td id="current">SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Pattern relative to 2 recent oil sardine collapses
+
+```{r}
+d=data.frame(x=c(1994,1995,1995,1994, 1994), y=c(1,1,Inf, Inf, 1))
+d2=data.frame(x=c(2015,2018,2018,2015,2015), y=c(1,1,Inf, Inf, 1))
+p <- p1$p + geom_smooth(span = 0.3)+
+    ggtitle(paste0("Number of days in each pattern in June-Sept (", meth, ")")) +
+  geom_polygon(data=d, aes(x=x, y=y), fill="red", alpha=0.2) +
+  geom_polygon(data=d2, aes(x=x, y=y), fill="red", alpha=0.2)
+  addIMGtopanel(p, img.list)
+```
+
+
+## Jun-Sep day of first and last strong upwelling signal
+
+* Same image processing
+* Identify the first and last day that image classified as strong upwelling
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td id="current">SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Jun-Sep day of first and last strong upwelling signal
+
+```{r}
+library(tidyr)
+grp_yrs <- years[mons%in%monvals]
+grp_date <- format(as.Date(rownames(X)[mons%in%monvals]), "%b-%d")
+first_day <- tapply(p1$clusters, grp_yrs, function(x){min(which(x==3))})
+last_day <- tapply(p1$clusters, grp_yrs, function(x){max(which(x==3))})
+df <- data.frame(year=as.numeric(names(first_day)), first_day=first_day, last_day=last_day, first_day2=grp_date[first_day], last_day2=grp_date[last_day])
+df2 <- df[,1:3] %>% pivot_longer(cols = 2:3, names_to="upwelling", values_to="day")
+ggplot(df2, aes(x=year, y=day, col=upwelling)) + 
+  geom_line() + geom_smooth(method="lm") +  
+  scale_y_continuous(breaks=seq(0,125,10),
+        labels=c("", grp_date[1:122][seq(0,125,10)]))+
+  ggtitle("First and last day of strong upwelling pattern")
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td id="current">SEAS</td><td>Summary</td>
+</tr></table></div>
+
+## Summary - Changes in the SEAS
+
+* Image classification worked on the daily data!
+* There is evidence that the upwelling season is changing
+   * shortening, or upwelling *width* is narrowing, or northern extent shrinking, or tip getting more intense
+   * Observed this with other approaches also
+* Rethink the image de-meaning and scaling
+   
+```{r sst.up, fig.height=2}
+mon <- "April"
+a=tapply(apply(X[mons==mon,],1,mean), years[mons==mon],mean)
+df <- data.frame(year=unique(years[mons=="May"]), temp=a)
+ggplot(df, aes(x=year, y=temp)) + geom_line() + xlab("") + ylab("temperature") +
+  ggtitle(paste("mean", mon, "temperature"))
+```
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td id="current">Summary</td>
+</tr></table></div>
+
+## Summary - Image Classification
+
+* **PCA**
+    * Very helpful in reducing the dimensionality
+    * Not clear that PC1-PC2 space captures enough variation
+    * Need to retry with just June-Sept data
+    * Distance from centroid might be useful...
+    
+* **k-means and hierarchical clustering**
+    * Identifying specific centroid images is very helpful
+    * *Which image is most like xyz* seems like a promising approach
+    * Need to think more on how to choose number of clusters
+
+
+<div id="footer">
+<table class="fTable">
+<tr>
+<td>Intro</td><td>PCA</td><td>K-means</td><td>H-clusters</td><td>SEAS</td><td id="current">Summary</td>
+</tr></table></div>
+
+## {data-background="images/IMG_3389.JPG"}
+
+### eli.holmes@noaa.gov
+### https://github.com/eeholmes/Upwelling-Image-Analysis
+### eeholmes.github.io
+
+

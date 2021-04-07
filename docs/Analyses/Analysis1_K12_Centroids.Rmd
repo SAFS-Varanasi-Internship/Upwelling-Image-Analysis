@@ -1,0 +1,486 @@
+---
+title: "Pilot K-means Analysis"
+subtitle: "Full year monthly SST"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+The purpose of the pilot project was two-fold:
+
+* test the feasibility of using k-means clustering on SST images to capture seasonal changes and the evolution of patterns over time.
+* explore different ways to approach the problem
+* decide on next steps
+
+Summary
+
+* k-means clustering can capture the shapes
+* removing the mean likely better because otherwise centers are too influenced by mean temperature
+* hierarchical clustering of the centers seems a reasonable way to come up with main groups from a larger K
+
+Next steps
+
+* Explore different K to see how big of a K is needed to capture the seasonal structure and shift that happens in June.
+
+## Read in the data
+
+Function to read in a csv file of SST. Four columns: date, lat, lon, SST.
+```{r}
+processCSV <- function(file, aspect_ratio, lat_range, long_range){
+  library(dplyr)
+
+#constants
+pixels <- prod(aspect_ratio)
+dates <- length(unique(dat$date))
+
+#reads the file. Maps out dates
+dat <- read.table(file, sep=",", skip=2)
+colnames(dat) <- c("date", "lat", "lon", "sst")
+dat$date <- as.Date(dat$date)
+
+# limit to certain box
+not.box <- dat$lat < lat_range[1] | dat$lat>lat_range[2] | dat$lon<long_range[1] | dat$lon>long_range[2]
+dat.box <- dat[!not.box, ]
+n.by.date <- tapply(dat.box$sst, dat.box$date, function(x){sum(is.na(x))})
+if(any((n.by.date-n.by.date[1])!=0)) stop("There's a problem. Should be same n for each date.")
+
+dat.wide <- pivot_wider(dat.box, names_from=date, values_from=sst)
+pos.loc <- which(!is.na(dat.wide[,3])) # which row are NA?
+dat.clean <- na.omit(dat.wide) # remove the rows that are NA
+
+# Note transpose since kmeans() wants variates in columns
+return(list(dat=t(dat.wide), dat.clean=t(dat.clean), pos.loc=pos.loc))
+}
+```
+
+Read in the data. Run once and then saved to an RData file. The data is a matrix where each row is a date (month) and each column is a pixel. The image has been unwrapped into a vector. The first 2 rows of the matrix are the lat and lon values for the pixels.
+```{r}
+datafile <- file.path(here::here(), "data", "SEAS-monthly-sst.RData")
+# file <- 'data/hawaii_soest_d124_2bb9_c935-5-27-48-80-1979-01-01-2020-06-01.csv'
+# aspect_ratio <- c(89,129)
+# lat_range <- c(7,13)
+# long_range <- c(72,78)
+# out <- processCSV(file=file, aspect_ratio=aspect_ratio,
+#                       lat_range=lat_range,
+#                       long_range=long_range)
+# save(out, file=datafile)
+load(datafile)
+```
+
+Set up the data and data features. `Data_clean` are the images without the NAs (land) and `Data_dirty` has the NAs. The latter will be need to reconstruct the images from the centroids. `pos_loc` is the indices of the non-NA values and is used to reconstruct the images.
+```{r}
+Data_clean <- out$dat.clean
+Data_dirty <- out$dat
+pos_loc <- out$pos.loc
+```
+
+Data clean and meta data. Remove the lat/lon rows and change to Celcius.
+```{r}
+lats <- Data_dirty[1,]
+lons <- Data_dirty[2,]
+asp <- c(table(lons)[1], table(lats)[1]) # lon (x) - lats (y)
+bb.box <- c(min(lons), max(lons), min(lats), max(lats))
+```
+
+## Create matrices for `kmeans()`
+
+We will use the non-normalized and normalized data. Need to remove the first 2 rows since those are the lat/lon values. For normalization, we use `scale()`.  `scale()` normalizes (removes mean and standardizes to variance 1) by column, but we need to normalize each date (row) not each pixel (column). So need to transpose. Also in the context of these images, we don't want to scale (i.e. stretch) the images but I add that for comparison.
+```{r}
+X <- Data_clean[c(-1,-2),] - 273.15
+X_norm <- scale(t(X), scale=FALSE)
+X_norm <- t(X_norm)
+X_norm_sd <- t(scale(t(X)))
+```
+
+## Plot K versus SS
+
+Plot the total within sum of squares for a range of K (number of centroids).
+
+```{r findKfun}
+findK <- function(X, nstart=25, iter.max=10, n_K=15){
+cost <- rep(0, n_K)
+for(k in  1:n_K) 
+  cost[k] <- kmeans(X, k, iter.max=iter.max, nstart=nstart)$tot.withinss
+plot(1:n_K, cost, xlab="K", ylab="total within ss", type="b")
+}
+```
+
+```{r kvsSS, cache=TRUE, fig.align='left'}
+par(mfrow=c(1,2))
+findK(X_norm, nstart=25, iter.max=10, n_K=15)
+abline(h=12)
+title("Normed data")
+findK(X, nstart=25, iter.max=10, n_K=15)
+abline(h=12)
+title("Non-normed data")
+```
+
+For the pilot analysis, set K = 12. Some relatively big to try to capture the variability.
+```{r}
+n_K <- 12
+iter.max <- 25
+nstart <- 100
+```
+
+## Create centroid raster stack
+
+Get centroids for normed data using the `kmeans()` function in base R.
+```{r}
+set.seed(1221966)
+out_kmeans_norm <- kmeans(X_norm, n_K, iter.max=iter.max, nstart=nstart)
+```
+
+Create the centroid images. Need to add back in the NAs.
+```{r}
+centroid_images <- matrix(NA, n_K, ncol(Data_dirty))
+centroid_images[, pos_loc] <- out_kmeans_norm$centers
+rownames(centroid_images) <- paste("Centroid", 1:n_K)
+```
+
+Make the centroid images into a raster stack (**raster** package).
+```{r}
+library(raster)
+img.list <- list()
+img.mat <- centroid_images
+for(i in 1:nrow(img.mat)){
+  # file is lat1, lat1, ..., lat1, lat2, lat2, ... so byrow=TRUE
+  # lat 7 is S and lat 13 is N; lat 72 is W and lat 78 is E
+  # asp is c(lons (x/cols), lats (y/rows))
+  tmp <- matrix(img.mat[i,], asp[2], asp[1], byrow=TRUE)
+  tmp <- tmp[asp[2]:1, ] # lat 7 at bottom not top
+  tmp <- raster(tmp)
+  extent(tmp) <- bb.box
+  img.list[[i]] <- tmp
+}
+img.list.norm <- img.list
+centroid_stack <- stack(img.list)
+names(centroid_stack) <- paste("Centroid", 1:n_K)
+crs(centroid_stack) <- "+proj=longlat +datum=WGS84"
+```
+
+## Centroids
+
+### Normed Data
+
+Make the plot using **tmap** package. One could just plot with **raster** but **tmap** is more flexible.
+```{r}
+library(tmap)
+pal <- topo.colors(100)
+pal <- colorRamps::matlab.like(100)
+tm_shape(centroid_stack) + 
+  tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tm_layout(panel.labels = paste("Centroid", 1:n_K)) +
+  tm_layout(main.title = "Centroids for Normalized Images", title.size = 1)
+```
+
+### Non-Normed Data
+
+Repeat the code above but for `X` the non-normed matrix.
+```{r}
+set.seed(1221966)
+out_kmeans <- kmeans(X, n_K, iter.max=iter.max, nstart=nstart)
+```
+
+```{r echo=FALSE}
+centroid_images <- matrix(NA, n_K, ncol(Data_dirty))
+centroid_images[, pos_loc] <- out_kmeans$centers
+rownames(centroid_images) <- paste("Centroid", 1:n_K)
+img.list <- list()
+img.mat <- centroid_images
+for(i in 1:nrow(img.mat)){
+  tmp <- matrix(img.mat[i,], asp[2], asp[1], byrow=TRUE)
+  tmp <- tmp[asp[2]:1, ] 
+  tmp <- raster::raster(tmp)
+  raster::extent(tmp) <- bb.box
+  img.list[[i]] <- tmp
+}
+centroid_stack <- raster::stack(img.list)
+names(centroid_stack) <- paste("Centroid", 1:n_K)
+raster::crs(centroid_stack) <- "+proj=longlat +datum=WGS84"
+img.list.orig <- img.list
+```
+
+In this plot, all the images are on the same SST scale. This makes it easy to see the upwelling pattern (cold next to coast), but makes is hard to see there is a pattern with a colder northern tongue and cold tip but different mean temperature.
+```{r centroid-nonnorm-plot1, echo=FALSE, fig.align='right'}
+pal <- topo.colors(100)
+pal <- colorRamps::matlab.like(100)
+tmap::tm_shape(centroid_stack) + 
+  tmap::tm_raster(style= "cont", title="SST", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tmap::tm_layout(panel.labels = paste("Centroid", 1:n_K)) +
+  tmap::tm_layout(main.title = "Centroids for Non-Normalized Images - Scales Same", main.title.size = 1)
+```
+
+That pattern is easy to see if all the images are on a different scale, but now it is not clear that the images have different mean temperatures.
+```{r  centroid-nonnorm-plot2, echo=FALSE, fig.align='left', out.width='570px'}
+pal <- topo.colors(100)
+pal <- colorRamps::matlab.like(100)
+tmap::tm_shape(centroid_stack) + 
+  tmap::tm_raster(style= "cont", title="SST Anomaly", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tmap::tm_layout(panel.labels = paste("Centroid", 1:n_K)) +
+  tmap::tm_layout(main.title = "Centroids Non-Normalized Images - Scales Different", main.title.size = 1) +
+  tmap::tm_layout(legend.show=FALSE) +
+  tmap::tm_facets(free.scales=TRUE)
+```
+
+### Normed and Variance standardized Data
+
+Repeat the code above but for `X` normed and variance standardized matrix.
+```{r}
+set.seed(1221966)
+out_kmeans_sd <- kmeans(X_norm_sd, n_K, iter.max=iter.max, nstart=nstart)
+```
+
+```{r echo=FALSE}
+out <- out_kmeans_sd
+centroid_images <- matrix(NA, n_K, ncol(Data_dirty))
+centroid_images[, pos_loc] <- out$centers
+rownames(centroid_images) <- paste("Centroid", 1:n_K)
+img.list <- list()
+img.mat <- centroid_images
+for(i in 1:nrow(img.mat)){
+  tmp <- matrix(img.mat[i,], asp[2], asp[1], byrow=TRUE)
+  tmp <- tmp[asp[2]:1, ] 
+  tmp <- raster::raster(tmp)
+  raster::extent(tmp) <- bb.box
+  img.list[[i]] <- tmp
+}
+img.list.sd <- img.list
+centroid_stack <- raster::stack(img.list)
+names(centroid_stack) <- paste("Centroid", 1:n_K)
+raster::crs(centroid_stack) <- "+proj=longlat +datum=WGS84"
+```
+
+The centroid images. Note images were demeaned and standardized to variance of 1.
+```{r centroid-norm-sd--plot1, echo=FALSE, fig.align='right'}
+pal <- topo.colors(100)
+pal <- colorRamps::matlab.like(100)
+tmap::tm_shape(centroid_stack) + 
+  tmap::tm_raster(style= "cont", title="SST-normed", 
+            palette=pal, midpoint=NA, 
+            colorNA = "grey", textNA = "Land") +
+  tmap::tm_layout(panel.labels = paste("Centroid", 1:n_K)) +
+  tmap::tm_layout(main.title = "Centroids for Normalized Images", main.title.size = 1)
+```
+
+
+## Distance between images
+
+Here I use hierarchical clustering on the distances between clusters.
+
+### Normed clusters
+
+```{r}
+CC <- out_kmeans_norm$centers
+labs <- paste0("C", 1:n_K, "  ", round(apply(CC,1,mean)-mean(CC),digits=1))
+rownames(CC) <- labs
+```
+
+Distance based on correlation.  The `dendIMG()` function is shown below.
+```{r echo=FALSE}
+source(file.path(here::here(), "R", "dendIMG.R"))
+```
+
+```{r message=FALSE, warning=FALSE}
+dendIMG(CC, img.list.norm, type="correlation", pal=pal, scale.same=TRUE)
+```
+
+Here the distance is Euclidian. 
+```{r}
+dendIMG(CC, img.list.norm, type="original", pal=pal, scale.same=TRUE)
+```
+
+### Non-normed clusters
+
+```{r}
+CC <- out_kmeans$centers
+labs <- paste0("C", 1:n_K, "  ", round(apply(CC,1,mean)-mean(CC),digits=1))
+rownames(CC) <- labs
+```
+
+Distance based on correlation. In this case, the mean temperature of the centroid images are not important since correlation is scale invariate. So this distance is based on *shape*. 
+```{r message=FALSE, warning=FALSE}
+dendIMG(CC, img.list.orig, type="correlation", pal=pal)
+```
+
+Here the distance is Euclidian. The first split of the tree is based on average temperature. In the labels, the number is the temperature of the centroid image relative to the mean over all centroids.
+```{r}
+dendIMG(CC, img.list.orig, type="original", pal=pal, scale.same=TRUE)
+```
+
+Removing the mean off the rows seems to capture the upwelling better. Images are shown for each centroid. Note, distance scaled to maximum of 1.
+```{r echo=FALSE, out.width="800px"}
+dendIMG(CC, img.list.orig, type="mean0", pal=colorRamps::matlab.like(20))
+```
+
+### Normed and variance standardized clusters
+
+```{r}
+CC <- out_kmeans_sd$centers
+labs <- paste0("C", 1:n_K)
+rownames(CC) <- labs
+```
+
+Distance based on correlation.  The `dendIMG()` function is shown below.
+```{r echo=FALSE}
+source(file.path(here::here(), "R", "dendIMG.R"))
+```
+
+```{r message=FALSE, warning=FALSE}
+dendIMG(CC, img.list.sd, type="correlation", pal=pal, scale.same=TRUE)
+```
+
+Here the distance is Euclidian. 
+```{r}
+dendIMG(CC, img.list.sd, type="original", pal=pal, scale.same=TRUE)
+```
+
+## Heat maps
+
+We can make a heatmap of cluster by month and year, but this randomly assigns colors to our clusters. We want the colors to match the types of shapes, so that upwelling shapes (say), all have the same color.
+```{r}
+library(ggplot2)
+df <- data.frame(date=as.Date(names(out_kmeans_norm$cluster)), cluster=as.factor(out_kmeans_norm$cluster))
+df$month <- factor(months(df$date), levels=month.name[c(1:12)])
+df$year <- as.numeric(format(df$date,'%Y'))
+ggplot(df, aes(x=year, y=month, fill= cluster)) + geom_tile()
+```
+
+### How to color the clusters?
+
+If we look at the Normed clusters, they seem to fall into some main groups: upwelling with nearshore-offshore differential, cold tip, and cold north tongue. We can then divide these into smaller groups. The numbers in parentheses are the sd of the images.
+```{r echo=FALSE}
+main.n <- 4; sub.n <- 6
+CC <- out_kmeans_norm$centers
+labs <- paste0("C", 1:n_K, "  ", round(apply(CC,1,var),digits=3))
+rownames(CC) <- labs
+#dend <- dendIMG(CC, img.list.norm, type="correlation", pal=pal, scale.same=TRUE, lab.extra="var")
+dend <- dendIMG(CC, img.list.norm, type="original", pal=pal, scale.same=TRUE, lab.extra="var")
+rect.dendrogram(dend, sub.n, border = 2)
+rect.dendrogram( dend, k=main.n, lty = 5, lwd = 0, col=rgb(0.1, 0.2, 0.4, 0.1) ) 
+```
+
+Much better! Color scheme is a bit wonky but we are getting the recoloring.
+```{r}
+group.colors <- rainbow(main.n)
+dend.group <- cutree(dend, k=main.n)
+img.group <- out_kmeans_norm$cluster
+for(i in 1:length(dend.group)) img.group[img.group==i] <- dend.group[i]
+df$main.group <- as.factor(img.group)
+ggplot(df, aes(x=year, y=month, fill=cluster)) + geom_tile() +
+  scale_fill_manual(values=group.colors[dend.group])
+```
+
+Now I will apply a color ramp within the main groups.
+```{r echo=FALSE}
+dend.group <- cutree(dend, k=sub.n)
+img.group <- out_kmeans_norm$cluster
+for(i in 1:length(dend.group)) img.group[img.group==i] <- dend.group[i]
+df$sub.group <- as.factor(img.group)
+
+# Set up my palette; ramp within the main groups
+dend.group.main <- cutree(dend, k=main.n)
+pal.sub <- rep(NA, n_K)
+pals <- c("YlOrRd", "Greys", "Blues", "Greens")
+for(i in 1:main.n){
+  sub.group <- unique(dend.group[dend.group.main==i])
+  cols <- rev(RColorBrewer::brewer.pal(max(3, length(sub.group)+2), pals[i]))
+  for(j in 1:length(sub.group))
+  pal.sub[dend.group==sub.group[j]] <- cols[j]
+}
+ggplot(df, aes(x=year, y=month, fill= cluster)) + geom_tile() +
+  scale_fill_manual(values=pal.sub)
+```
+
+### Normed heatmaps
+
+Here are a few different versions of heat maps.
+```{r echo=FALSE}
+source(file.path(here::here(), "R", "myheatmap.R"))
+source(file.path(here::here(), "R", "desat.R"))
+```
+
+Here I ramp based on the subgroups.
+
+```{r}
+myheatmap(dend, out_kmeans_norm, main.n=main.n, sub.n=sub.n, ramp="mean")
+```
+
+
+Here I show all clusters within the main groups and ramp is based on the variance. Darker colors equal higher variance. A lot of the centers have the same/similar variance so are the same shade.
+```{r}
+myheatmap(dend, out_kmeans_norm, main.n=main.n, sub.n=n_K, ramp="var", ramp.type=2)
+```
+
+
+
+### Non-normed heatmaps
+
+```{r}
+CC <- out_kmeans$centers
+labs <- paste0("C", 1:n_K, "  ", round(apply(CC,1,mean)-mean(CC),digits=1))
+rownames(CC) <- labs
+dend <- dendIMG(CC, img.list.orig, type="mean0", pal=pal, scale.same=FALSE)
+rect.dendrogram(dend, sub.n, border = 2)
+rect.dendrogram( dend, k=main.n, lty = 5, lwd = 0, col=rgb(0.1, 0.2, 0.4, 0.1) ) 
+```
+```{r echo=FALSE}
+source(file.path(here::here(), "R", "myheatmap.R"))
+```
+
+Here I ramp based on the subgroups. Within a subgroup, darker colors are warmer.
+```{r}
+myheatmap(dend, out_kmeans, main.n=main.n, sub.n=sub.n, ramp="mean")
+```
+
+Here I ramp based on variance and show all clusters with the three main groups. Notice how running the algorithm on the non-normed data missed any structure outside of the summer months. 
+```{r}
+myheatmap(dend, out_kmeans, main.n=main.n, sub.n=sub.n, ramp="var", ramp.type=2)
+```
+
+Here I ramp based on mean and show all clusters with the three main groups. 
+```{r}
+myheatmap(dend, out_kmeans, main.n=main.n, sub.n=n_K, ramp="mean", ramp.type=2)
+```
+
+### Normed and variance standardized heatmaps
+
+```{r echo=FALSE}
+source(file.path(here::here(), "R", "myheatmap.R"))
+source(file.path(here::here(), "R", "desat.R"))
+```
+
+```{r}
+CC <- out_kmeans_sd$centers
+labs <- paste0("C", 1:n_K)
+rownames(CC) <- labs
+dend <- dendIMG(CC, img.list.sd, type="original", pal=pal, scale.same=FALSE, lab.extra = "none")
+rect.dendrogram(dend, sub.n, border = 2)
+rect.dendrogram( dend, k=main.n, lty = 5, lwd = 0, col=rgb(0.1, 0.2, 0.4, 0.1) ) 
+```
+
+Here I ramp based on the subgroups. Since the images are demeaned and variance standardized, I cannot ramp on either of those.
+```{r}
+myheatmap(dend, out_kmeans_sd, main.n=main.n, sub.n=sub.n, ramp="mean")
+```
+
+## functions
+
+```{r results="asis", echo=FALSE}
+cat("```\n")
+writeLines(readLines(file.path(here::here(), "R", "dendIMG.R")), sep="\n")
+cat("```\n")
+```
+
+```{r results="asis", echo=FALSE}
+cat("```\n\n")
+writeLines(readLines(file.path(here::here(), "R", "myheatmap.R")), sep="\n")
+cat("```\n")
+```
