@@ -13,8 +13,8 @@
 #'  Common ids on apdrc.soest.hawaii.edu server
 #'  * ERA5 1950-1978 hawaii_soest_26fe_f2c9_ed3b
 #'  * ERA5 1979-2021 hawaii_soest_d124_2bb9_c935
-#'  * NOAA IOSST AVHRR daily hawaii_soest_afc8_9785_907e; add 0.125 to lat and lon
-#'  * NOAA IOSST AVHRR daily 2016+ hawaii_soest_330b_094e_ca45
+#'  * NOAA OISST AVHRR daily hawaii_soest_afc8_9785_907e; add 0.125 to lat and lon
+#'  * NOAA OISST AVHRR daily 2016+ hawaii_soest_330b_094e_ca45
 #'  
 #' @param id The id of the data. Like hawaii_soest_26fe_f2c9_ed3b. In quotes.
 #' @param pars Name of the parameter. Like sst, e.g. In quotes.

@@ -30,7 +30,7 @@ dat.clean <- rbind(dat.clean, out$dat.clean[c(-1,-2),])
 out <- list(dat=dat, dat.clean=dat.clean, pos.loc=pos.loc)
 save(out, file="data/SEAS-monthly-sst.RData")
 
-# IOSST Daily data
+# OISST Daily data
 getdata("hawaii_soest_afc8_9785_907e", pars="sst", lat=c(7,13)+0.125, lon=c(72,78)+0.125, 
         date=c("1981-09-01","1981-12-31"))
 for(i in 1983:2015){
@@ -38,7 +38,7 @@ for(i in 1983:2015){
   getdata("hawaii_soest_afc8_9785_907e", pars="sst", lat=c(7,13)+0.125, lon=c(72,78)+0.125, 
         date=c(paste0(i,"-01-01"), paste0(i,"-12-31")))
 }
-# IOSST Daily data 2016+
+# OISST Daily data 2016+
 for(i in 2016:2019){
   cat(i, " ")
   getdata("hawaii_soest_330b_094e_ca45", pars="sst", 

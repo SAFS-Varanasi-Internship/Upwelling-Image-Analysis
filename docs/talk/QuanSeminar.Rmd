@@ -1,7 +1,7 @@
 ---
 title: "Using unsupervised image classification to study changes in seasonal upwelling in the Southeast Arabian Sea"
 subtitle: "Elizabeth Eli Holmes, NWFSC UW SAFS"
-date: "9 Apr 2021 SAFS Quantative Seminar"
+date: "9 Apr 2021 SAFS Quantitative Seminar"
 output:
   ioslides_presentation:
     css: talk.css
@@ -189,10 +189,10 @@ Di Lorenzo, E. 2015. The future of coastal ocean upwelling. Nature 518, 310–31
 
 ### Notes
 
-* Changes to the <font style="color:red">pattern</font> not absolute temperature
+* Changes to the <font style="color:red">pattern</font> not absolute temperature. I removed the mean from each image.
 * Arabian Sea has warmed 1-2 deg C in the past 2 decades.
-* I removed the mean from each image.
 * **monthly** images in most of the talk, but **daily** at the end
+* Monthly SST from [ERA5 global reanalysis](http://apdrc.soest.hawaii.edu/datadoc/ecmwf_ERA5.php) 0.25 deg grid; Daily SST for [NOAA OISST](https://www.ncdc.noaa.gov/oisst) AVHRR-only 0.25 deg grid.
 
 <div id="footer">
 <table class="fTable">
@@ -1040,7 +1040,7 @@ dendIMG(centers, img.list, lab.extra="none")
 
 ## Upwelling changes in the SEAS
 
-**Daily** SST from the NOAA IOSST AVHRR-only data set.
+**Daily** SST from the [NOAA OISST](https://www.ncdc.noaa.gov/oisst) AVHRR-only data set.
 
 ```{r echo=FALSE}
 # Data
