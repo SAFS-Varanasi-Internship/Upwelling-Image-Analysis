@@ -1,0 +1,12 @@
+---
+title: "Talks"
+subtitle: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+* April 9, 2021 [Quantitative Seminar](talk/QuanSeminar.html)

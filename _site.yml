@@ -5,6 +5,10 @@ navbar:
     - text: ""
       icon: fa-home fa-lg
       href: index.html
+    - text: "Analyses"
+      href: analyses.html
+    - text: "Talks"
+      href: talks.html
 
 output_dir: "docs"
 output:

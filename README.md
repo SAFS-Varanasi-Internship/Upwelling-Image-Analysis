@@ -7,4 +7,8 @@ Analysis of SST data for upwelling patterns
 * [K-means heatmaps different K](https://eeholmes.github.io/Upwelling-Image-Analysis/Analyses/Analysis2_K_heatmaps.html)
 * [kmeans vs hclust](https://eeholmes.github.io/Upwelling-Image-Analysis/Analyses/Analysis3_kmeans_hclust.html)
 
+Talks
+
+* [Quantitative Seminar](https://eeholmes.github.io/Upwelling-Image-Analysis/talk/QuanSeminar.html)
+
 
