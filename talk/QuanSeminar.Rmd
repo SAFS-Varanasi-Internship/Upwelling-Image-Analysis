@@ -1,7 +1,7 @@
 ---
 title: "Using unsupervised image classification to study changes in seasonal upwelling in the Southeast Arabian Sea"
 subtitle: "Elizabeth Eli Holmes, NWFSC UW SAFS"
-date: "9 Apr 2021 SAFS Quantative Seminar"
+date: "9 Apr 2021 SAFS Quantitative Seminar"
 output:
   ioslides_presentation:
     css: talk.css
