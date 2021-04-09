@@ -189,10 +189,10 @@ Di Lorenzo, E. 2015. The future of coastal ocean upwelling. Nature 518, 310–31
 
 ### Notes
 
-* Changes to the <font style="color:red">pattern</font> not absolute temperature
+* Changes to the <font style="color:red">pattern</font> not absolute temperature. I removed the mean from each image.
 * Arabian Sea has warmed 1-2 deg C in the past 2 decades.
-* I removed the mean from each image.
 * **monthly** images in most of the talk, but **daily** at the end
+* Monthly SST from ERA5 global reanalysis 0.25 deg grid; Daily SST for NOAA IOSST AVHRR-only 0.25 deg grid.
 
 <div id="footer">
 <table class="fTable">
