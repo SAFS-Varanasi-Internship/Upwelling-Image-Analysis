@@ -1,0 +1,232 @@
+---
+title: "Download and create RData files"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+# Set eval to FALSE in order not to accidentally redownload everything
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE, eval=FALSE)
+```
+
+# Overview
+
+## Data list structure
+
+The data file is a list with `dat`, `dat.clean`, and `pos.loc`. `dat` and `dat.clean` are vectorized images, meaning a raster image is made into a vector by concatenating each row of the raster into a rows $\times$ columns vector. The first 2 rows of `dat` and `dat.clean` are the latitude and longitude values. `dat` has the land (NAs) while `dat.clean` has the land removed so is smaller. `pos.loc` is the location of the positive values (not land) in `dat`. `pos.loc` is used to allow you to reconstruct the image from `dat.clean`.
+
+For example, if the image were 5 $\times$ 5 pixels, then the location values would be.
+```{r echo=FALSE}
+knitr::kable(matrix(1:25, 5,5, byrow=TRUE))
+```
+
+Let's say the land was mainly on the righthand side.
+```{r echo=FALSE}
+M <- matrix(c(round(rnorm(18), digits=1), rep(NA,7)), 5,5)
+knitr::kable(M)
+```
+
+`dat` for this image would be
+```{r echo=FALSE}
+dat <- as.vector(t(M))
+dat
+```
+
+`dat.clean` would be
+```{r echo=FALSE}
+dat.clean <- na.omit(as.vector(t(M)))
+dat.clean
+```
+
+`pos.loc` would be 
+```{r echo=FALSE}
+pos.loc <- which(!is.na(t(M)))
+pos.loc
+```
+
+We can reconstruct `dat` from `dat.clean` and `pos.loc` by
+```{r}
+M2 <- rep(NA, 25)
+M2[pos.loc] <- dat.clean
+```
+
+## `dat` matrix structure
+
+The first two rows of the `dat` (and `dat.clean`) matrix are the lat and lon values for each cell. Subsequent rows are the image values for a date. The date is the rowname of the row. There are no column names.
+
+## File name convention
+
+The csv files are named with the convention:
+
+```
+erddapid-minlat-maxlat-minlon-maxlon-mindate-maxdate.csv
+```
+
+## Functions
+
+There are two functions `processCSV()` and `getdat()`.
+
+`processCSV()` takes the individual csv files, which are downloaded from an ERDDAP server for a specified lat/lon box and time range, and processes those into the `dat` and `dat.clean` matrices.  The csv files will have four columns: time, latitude, longitude, variable (e.g. sst). The function needs to know the aspect ratio of the box which is a 2 number vector of height (number of cells in N-S direction) and width (number of cells in the E-W direction). The images can be subset to a smaller region than the original box. This is done using `lat_range` and `lon_range` which are 2 number vectors (min and max values). The data are saved to the file name `file`.
+
+```
+processCSV(file=file, aspect_ratio=aspect_ratio, 
+                      lat_range=lat_range,
+                      long_range=long_range)
+```
+
+`getdata()` downloads data (labeled `id` on the server) from an ERDDAP server (`eserver`), for a parameter (or all if NULL), and specific lat/lon range, date range (or all if NULL). The file is saved to `datadir`.
+
+```
+getdata(id, pars=NULL, lat=c(7,13), lon=c(72,78), date=NULL, 
+                    altitude=10, alt.name="altitude",
+                    eserver="http://apdrc.soest.hawaii.edu/erddap",
+                    datadir = "data")
+```
+
+# Optimum Interpolation Monthly SST data
+
+The [APDRC](http://apdrc.soest.hawaii.edu) ERDDAP server is at http://apdrc.soest.hawaii.edu/erddap/. There are two ids for OISST data over different year ranges.
+
+* 1979-2020 **hawaii_soest_d124_2bb9_c935**. An example URL is http://apdrc.soest.hawaii.edu/erddap/griddap/hawaii_soest_d124_2bb9_c935.htmlTable?sst[(2021-02-01T00:00:00Z):1:(2021-02-01T00:00:00Z)][(7):1:(13)][(72):1:(78)]
+* 1950-1978 **hawaii_soest_26fe_f2c9_ed3b**. An example URL is http://apdrc.soest.hawaii.edu/erddap/griddap/hawaii_soest_26fe_f2c9_ed3b.htmlTable?sst[(1950-01-01T00:00:00Z):1:(1978-12-01T00:00:00Z)][(7):1:(13)][(72):1:(78)]
+
+Download the 1979 to 2020 monthly data.
+```{r}
+file <- 'data/hawaii_soest_d124_2bb9_c935-5-27-48-80-1979-01-01-2020-06-01.csv'
+aspect_ratio <- c(89,129)
+lat_range <- c(7,13)
+long_range <- c(72,78)
+out <- processCSV(file=file, aspect_ratio=aspect_ratio, 
+                      lat_range=lat_range,
+                      long_range=long_range)$dat
+save(out, file="data/SEAS-monthly-sst-1979-2020.RData")
+```
+
+Download the 1950 to 1980 data.
+```{r}
+file <- 'data/hawaii_soest_26fe_f2c9_ed3b-7-13-72-78-1950-01-01-1978-12-01.csv'
+lat_range <- c(7,13)
+long_range <- c(72,78)
+aspect_ratio <- c(1+(lat_range[2]-lat_range[1])/0.25,1+(long_range[2]-long_range[1])/0.25)
+out <- processCSV(file=file, aspect_ratio=aspect_ratio, 
+                      lat_range=lat_range,
+                      long_range=long_range)
+save(out, file="data/SEAS-monthly-sst-1950-1978.RData")
+```
+
+Merge the two files. Note I saved the files separately because downloading takes a long time.
+```{r}
+datafile <- file.path(here::here(), "data", "SEAS-monthly-sst-1950-1978.RData")
+load(datafile)
+dat <- out$dat
+dat.clean <- out$dat.clean
+pos.loc <- out$pos.loc
+datafile <- file.path(here::here(), "data", "SEAS-monthly-sst-1979-2020.RData")
+load(datafile)
+dat <- rbind(dat, out$dat[c(-1,-2),])
+dat.clean <- rbind(dat.clean, out$dat.clean[c(-1,-2),])
+out <- list(dat=dat, dat.clean=dat.clean, pos.loc=pos.loc)
+save(out, file="data/SEAS-monthly-sst.RData")
+```
+
+# OISST Daily data
+
+The [APDRC](http://apdrc.soest.hawaii.edu) ERDDAP ids for the daily OISST data is
+
+* 1981-2015 **hawaii_soest_afc8_9785_907e**
+* 2016-2020 **hawaii_soest_330b_094e_ca45**
+
+Because downloading the daily data for all years would lead to excessively large csv files, I break the files into 1 year csv files.
+```{r}
+getdata("hawaii_soest_afc8_9785_907e", pars="sst", lat=c(7,13)+0.125, lon=c(72,78)+0.125, 
+        date=c("1981-09-01","1981-12-31"))
+for(i in 1982:2015){
+  cat(i, " ")
+  getdata("hawaii_soest_afc8_9785_907e", pars="sst", lat=c(7,13)+0.125, lon=c(72,78)+0.125, 
+        date=c(paste0(i,"-01-01"), paste0(i,"-12-31")))
+}
+```
+
+The 2016+ data are in a different id with a different altitude parameter name.
+```{r}
+for(i in 2016:2019){
+  cat(i, " ")
+  getdata("hawaii_soest_330b_094e_ca45", pars="sst", 
+          altitude=0, alt.name="LEV",
+          lat=c(7,13)+0.125, lon=c(72,78)+0.125, 
+          date=c(paste0(i,"-01-01"), paste0(i,"-12-31")))
+}
+```
+
+There is a weird problem with 2020. I alerted the ERDDAP maintainer and it may be already fixed.
+```{r}
+# Weird problem with 2020
+i = 2020
+cat(i, " ")
+getdata("hawaii_soest_330b_094e_ca45", pars="sst", 
+        altitude=0, alt.name="LEV",
+        lat=c(7,13)+0.125, lon=c(72,78)+0.125, 
+        date=c(paste0(i,"-01-01"), paste0(i,"-02-27")))
+getdata("hawaii_soest_330b_094e_ca45", pars="sst", 
+        altitude=0, alt.name="LEV",
+        lat=c(7,13)+0.125, lon=c(72,78)+0.125, 
+        date=c(paste0(i,"-02-28"), paste0(i,"-12-31")))
+```
+
+The files are then processed into a single RData file. First 1981:
+```{r}
+i <- 1981
+file <- paste0("data/hawaii_soest_afc8_9785_907e-7.125-13.125-72.125-78.125-", i, "-09-01-", i, "-12-31.csv")
+lat_range <- c(7,13)+0.125
+long_range <- c(72,78)+0.125
+aspect_ratio <- c(1+(lat_range[2]-lat_range[1])/0.25,1+(long_range[2]-long_range[1])/0.25)
+out <- processCSV(file=file, aspect_ratio=aspect_ratio, 
+                  lat_range=lat_range,
+                  long_range=long_range)
+dat <- out$dat
+dat.clean <- out$dat.clean
+pos.loc <- out$pos.loc
+```
+
+Next add the 1982 to 2015 to the data lists.
+```{r}
+for(i in 1982:2019){
+  if(i <= 2015) fil <- "data/hawaii_soest_afc8_9785_907e-7.125-13.125-72.125-78.125-"
+  if(i >= 2016) fil <- "data/hawaii_soest_330b_094e_ca45-7.125-13.125-72.125-78.125-"
+  file <- paste0(fil, i, "-01-01-", i, "-12-31.csv")
+  out <- processCSV(file=file, aspect_ratio=aspect_ratio, 
+                    lat_range=lat_range,
+                    long_range=long_range)
+  dat <- rbind(dat, out$dat[c(-1,-2),])
+  dat.clean <- rbind(dat.clean, out$dat.clean[c(-1,-2),])
+}
+```
+
+Due to the problem with 2020, the data were saved to two different csv files.
+```{r}
+i <- 2020
+file <- paste0("data/hawaii_soest_330b_094e_ca45-7.125-13.125-72.125-78.125-", i, "-01-01-", i, "-02-27.csv")
+out <- processCSV(file=file, aspect_ratio=aspect_ratio, 
+                  lat_range=lat_range,
+                  long_range=long_range, has.alt=TRUE)
+dat <- rbind(dat, out$dat[c(-1,-2),])
+dat.clean <- rbind(dat.clean, out$dat.clean[c(-1,-2),])
+file <- paste0("data/hawaii_soest_330b_094e_ca45-7.125-13.125-72.125-78.125-", i, "-02-28-", i, "-12-31.csv")
+out <- processCSV(file=file, aspect_ratio=aspect_ratio, 
+                  lat_range=lat_range,
+                  long_range=long_range, has.alt=TRUE)
+dat <- rbind(dat, out$dat[c(-1,-2),])
+dat.clean <- rbind(dat.clean, out$dat.clean[c(-1,-2),])
+
+out <- list(dat=dat, dat.clean=dat.clean, pos.loc=pos.loc)
+```
+
+Finally the assembled data list is saved.
+```{r}
+save(out, file="data/SEAS-daily-sst-1981-2020.RData")
+```
+
+
