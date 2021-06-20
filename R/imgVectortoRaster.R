@@ -1,5 +1,22 @@
-#load(datafile)
-#datalist <- out
+#' Convert vector images to rasters
+#'
+#' Takes a matrix where each row is an image in vector form and turns that into raster images. This
+#' function is specific to the data format for the upwelling project.
+#'
+#' @param centers a matrix where each row is an image in vector form. It is assumed to be only
+#'  the cleaned (no land) images.
+#' @param datalist a data list with information about the positive locations (non-land).
+#'
+#' @details 
+#' 
+#' `datalist` is a list with `dat`, `dat.clean`, and `pos.loc`. `dat` and `dat.clean` are 
+#' vectorized images, meaning a raster image is made into a vector by concatenating each row of 
+#' the raster into a rows $\times$ columns vector. The first 2 rows of `dat` and `dat.clean` are 
+#' the latitude and longitude values. `dat` has the land (NAs) while `dat.clean` has the land 
+#' removed so is smaller. `pos.loc` is the location of the positive values (not land) in `dat`. 
+#' `pos.loc` is used to allow you to reconstruct the image from `dat.clean`.
+#'
+#' @export
 imgVectortoRaster <- function(centers, datalist){
   n_K <- nrow(centers)
   Data_dirty <- datalist$dat

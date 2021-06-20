@@ -6,6 +6,9 @@
 #' @param n_inits
 #' @param n_iters
 #' @param n_K
+#' 
+#' @return Plots K versus cost.
+#' 
 #' @export
 findK <- function(X, nstart=25, iter.max=10, n_K=15){
 # Initlizize costs
