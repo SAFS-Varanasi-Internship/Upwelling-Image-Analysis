@@ -8,7 +8,7 @@
 #' row of our data matrix to be a date and the columns will be the pixels in the image.
 #'
 #' @param X
-#' @param aspect_ratio
+#' @param aspect_ratio c(width, height). This is `c(length(unique(lons)), length(unique(lats)))`
 #' @param lat_range What range to subset
 #' @param long_range What range to subset
 #' @param has.alt If TRUE, then remove 2nd column
