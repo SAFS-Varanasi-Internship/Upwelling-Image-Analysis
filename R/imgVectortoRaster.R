@@ -22,7 +22,7 @@ imgVectortoRaster <- function(centers, datalist){
   Data_dirty <- datalist$dat
   lats <- Data_dirty[1,]
   lons <- Data_dirty[2,]
-  asp <- c(table(lons)[1], table(lats)[1]) # lon (x) - lats (y)
+  asp <- c(length(unique(lons)), length(unique(lats))) # c(width (cols), height (rows))
   bb.box <- c(min(lons), max(lons), min(lats), max(lats))
   centroid_images <- matrix(NA, n_K, ncol(Data_dirty))
   centroid_images[, datalist$pos.loc] <- centers
