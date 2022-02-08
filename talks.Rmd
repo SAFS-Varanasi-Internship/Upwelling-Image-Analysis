@@ -8,7 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
+* Initial pilot project: [Talk pdf](Analyses/Pilot/Dartmouth_Earth_Sci_Feb_2020.pdf) --- [Talk video](Analyses/Pilot/Zikan_Pilot_Talk.mp4)
 * April 9, 2021 Quantitative Seminar E Holmes: [Slides](https://UW-Upwelling-Project.github.io/Upwelling-Image-Analysis/talk/QuanSeminar.html) &mdash; [repo](https://github.com/UW-Upwelling-Project/Upwelling-Image-Analysis/tree/main/talk)
 * Summer 2021 intern project H Baek: [Blog post](http://insidethetv.rbind.io/post/2021-09-10-automatic-detection-of-upwelling/)
 * Nov 2021 NASA Hackathon project E Holmes: [Slides](https://docs.google.com/presentation/d/1YjBrNRHCPWUKjoT5FC3FgqhzcVuJsqtmrFdRW29FkGs/edit#slide=id.g1019bf4f985_0_98) &mdash; [repo](https://github.com/UW-Upwelling-Project/nhw21-projects-upwelling/blob/main/README.md)
