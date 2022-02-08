@@ -22,8 +22,5 @@ knitr::opts_chunk$set(echo = TRUE)
 * [Quantitative Seminar](talk/QuanSeminar.html)
 
 
-# Authors
-
-* [Eli Holmes](faculty.washington.edu/eeholmes), Northwest Fisheries Science Center, NOAA Fisheries
-* [Jacob T Zikan](https://www.linkedin.com/in/jake-zikan), Dartmouth College
+# 
 
