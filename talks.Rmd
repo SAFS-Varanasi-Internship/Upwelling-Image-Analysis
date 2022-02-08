@@ -10,3 +10,5 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 * April 9, 2021 [Quantitative Seminar](talk/QuanSeminar.html)
+* Nov 2021 [NASA Hackathon project](https://docs.google.com/presentation/d/1YjBrNRHCPWUKjoT5FC3FgqhzcVuJsqtmrFdRW29FkGs/edit#slide=id.g1019bf4f985_0_98)
+* 
