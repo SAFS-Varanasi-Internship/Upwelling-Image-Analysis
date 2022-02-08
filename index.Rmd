@@ -25,4 +25,5 @@ This project is focusing intially on two major seasonal upwelling regions in the
 
 * [Eli Holmes](faculty.washington.edu/eeholmes), Northwest Fisheries Science Center, NOAA Fisheries
 * [Jacob T Zikan](https://www.linkedin.com/in/jake-zikan), Dartmouth College
+* [Howard Baek](https://github.com/howardbaek)
 
